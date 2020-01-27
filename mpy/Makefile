@@ -2,10 +2,10 @@
 MPY_DIR = $(HOME)/git/micropython
 
 # Name of module
-MOD = eve
+MOD = bteve
 
 # Source files (.c or .py)
-SRC = stem.c
+SRC = stem.c # ../registers.py
 
 # Architecture to build for (x86, x64, armv7m, xtensa, xtensawin)
 ARCH = x64
