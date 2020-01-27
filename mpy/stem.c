@@ -32,12 +32,12 @@ STATIC mp_obj_t stem_make_new(
     return o;
 }
 
-STATIC mp_obj_t _init(mp_obj_t self, mp_obj_t o) {
+STATIC mp_obj_t _register(mp_obj_t self, mp_obj_t o) {
     mp_obj_stem_t *stem = self;
     stem->writer = o;
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(init_obj, _init);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(register_obj, _register);
 
 STATIC mp_obj_t _flush(mp_obj_t self) {
     mp_obj_stem_t *stem = self;
@@ -71,7 +71,7 @@ mp_obj_t mpy_init(mp_obj_fun_bc_t *self, size_t n_args, size_t n_kw, mp_obj_t *a
     stem_type.name = MP_QSTR_stem;
     stem_type.print = stem_print;
     stem_type.make_new = stem_make_new;
-    stem_locals_dict_table[0] = (mp_map_elem_t){ MP_OBJ_NEW_QSTR(MP_QSTR_init), MP_OBJ_FROM_PTR(&init_obj) };
+    stem_locals_dict_table[0] = (mp_map_elem_t){ MP_OBJ_NEW_QSTR(MP_QSTR_register), MP_OBJ_FROM_PTR(&register_obj) };
     stem_locals_dict_table[1] = (mp_map_elem_t){ MP_OBJ_NEW_QSTR(MP_QSTR_flush), MP_OBJ_FROM_PTR(&flush_obj) };
     stem_locals_dict_table[2] = (mp_map_elem_t){ MP_OBJ_NEW_QSTR(MP_QSTR_PointSize), MP_OBJ_FROM_PTR(&pointsize_obj) };
     stem_type.locals_dict = (void*)&stem_locals_dict;
