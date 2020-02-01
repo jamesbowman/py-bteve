@@ -30,7 +30,7 @@ class EVEH:
         # self.cc(array.array("i", aa[1:]).tobytes())
 
     def cmd_append(self, *args):
-        self.cmd_(0x1f, "II", args)
+        self.cmd_(0x1e, "II", args)
 
     def cmd_bgcolor(self, *args):
         self.cmd_(0x09, "I", args)
