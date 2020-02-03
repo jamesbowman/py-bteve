@@ -1,8 +1,12 @@
+import sys
 import time
 import struct
 from eveL import EVEL
 from eveH import EVEH
 from registers import *
+
+if sys.implementation.name != "circuitpython":
+    def const(x): return x
 
 REG_ID = const(0x302000)
 REG_HSIZE = const(0x302034)
@@ -16,9 +20,12 @@ REG_PWM_HZ = 0x3020d0
 
 FIFO_MAX = const(0xffc)    # Maximum reported free space in the EVE command FIFO
 
+class CoprocessorException(Exception):
+    pass
+
 class Gameduino(EVEL, EVEH):
-    def __init__(self, spi):
-        self.spi = spi
+    def init(self):
+        self.register(self)
 
         self.coldstart()
 
@@ -27,9 +34,12 @@ class Gameduino(EVEL, EVEH):
             assert (time.time() - t0) < 2.0, "No response - is device attached?"
 
         self.getspace()
+        print("ID %x  %x %x %x" % (
+            self.rd32(REG_ID),
+            self.rd32(REG_HSIZE),
+            self.rd32(REG_VSIZE),
+            self.rd32(REG_CMDB_SPACE)))
 
-    def init(self):
-        self.register(self)
         self.standard_startup()
 
     def coldstart(self):
@@ -39,7 +49,7 @@ class Gameduino(EVEL, EVEH):
         # self.host_cmd(0x68)       # Core reset
 
     def host_cmd(self, a, b = 0, c = 0):
-        self.spi.transfer(bytes([a, b, c]))
+        self.transfer(bytes([a, b, c]))
 
     def standard_startup(self):
         self.Clear(1,1,1)
@@ -74,10 +84,10 @@ class Gameduino(EVEL, EVEH):
         return struct.pack(">I", a)[1:]
 
     def rd(self, a, n):
-        return self.spi.transfer(self._addr(a), 1 + n)[1:]
+        return self.transfer(self._addr(a), 1 + n)[1:]
 
     def wr(self, a, v):
-        self.spi.transfer(self._addr(0x800000 | a) + v)
+        self.transfer(self._addr(0x800000 | a) + v)
 
     def rd32(self, a):
         return struct.unpack("<I", self.rd(a, 4))[0]

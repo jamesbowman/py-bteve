@@ -14,13 +14,6 @@ def furmans(deg):
 
 class EVEH:
 
-    def cmd0(self, num):
-        self.cc(struct.pack("I", 0xffffff00 | num))
-
-    def cmd_(self, num, fmt, args):
-        self.cmd0(num)
-        self.cc(struct.pack(fmt, *args))
-
     def cstring(self, s):
         self.cc(align4(bytes(s, "utf-8") + _B0))
 
@@ -30,132 +23,132 @@ class EVEH:
         # self.cc(array.array("i", aa[1:]).tobytes())
 
     def cmd_append(self, *args):
-        self.cmd_(0x1e, "II", args)
+        self.cmd(0x1e, "II", args)
 
     def cmd_bgcolor(self, *args):
-        self.cmd_(0x09, "I", args)
+        self.cmd(0x09, "I", args)
 
     def cmd_bitmap_transform(self, *args):
-        self.cmd_(0x21, "iiiiiiiiiiiiI", args)
+        self.cmd(0x21, "iiiiiiiiiiiiI", args)
 
     def cmd_button(self, *args):
-        self.cmd_(0x0d, "hhhhhH", args[:6])
+        self.cmd(0x0d, "hhhhhH", args[:6])
         self.fstring(args[6:])
 
     def cmd_calibrate(self, *args):
-        self.cmd_(0x15, "I", args)
+        self.cmd(0x15, "I", args)
 
     def cmd_clock(self, *args):
-        self.cmd_(0x14, "hhhHHHHH", args)
+        self.cmd(0x14, "hhhHHHHH", args)
 
     def cmd_coldstart(self):
         self.cmd0(0x32)
 
     def cmd_dial(self, *args):
-        self.cmd_(0x2d, "hhhHI", args)
+        self.cmd(0x2d, "hhhHI", args)
 
     def cmd_dlstart(self):
         self.cmd0(0x00)
 
     def cmd_fgcolor(self, *args):
-        self.cmd_(0x0a, "I", args)
+        self.cmd(0x0a, "I", args)
 
     def cmd_gauge(self, *args):
-        self.cmd_(0x13, "hhhHHHHH", args)
+        self.cmd(0x13, "hhhHHHHH", args)
 
     def cmd_getmatrix(self, *args):
-        self.cmd_(0x33, "iiiiii", args)
+        self.cmd(0x33, "iiiiii", args)
 
     def cmd_getprops(self, *args):
-        self.cmd_(0x25, "III", args)
+        self.cmd(0x25, "III", args)
 
     def cmd_getptr(self, *args):
-        self.cmd_(0x23, "I", args)
+        self.cmd(0x23, "I", args)
 
     def cmd_gradcolor(self, *args):
-        self.cmd_(0x34, "I", args)
+        self.cmd(0x34, "I", args)
 
     def cmd_gradient(self, *args):
-        self.cmd_(0x0b, "hhIhhI", args)
+        self.cmd(0x0b, "hhIhhI", args)
 
     def cmd_inflate(self, *args):
-        self.cmd_(0x22, "I", args)
+        self.cmd(0x22, "I", args)
 
     def cmd_interrupt(self, *args):
-        self.cmd_(0x02, "I", args)
+        self.cmd(0x02, "I", args)
 
     def cmd_keys(self, *args):
-        self.cmd_(0x0e, "hhhhhH", args[:6])
+        self.cmd(0x0e, "hhhhhH", args[:6])
         self.cstring(args[6])
 
     def cmd_loadidentity(self):
         self.cmd0(0x26)
 
     def cmd_loadimage(self, *args):
-        self.cmd_(0x24, "II", args)
+        self.cmd(0x24, "iI", args)
 
     def cmd_logo(self):
         self.cmd0(0x31)
 
     def cmd_memcpy(self, *args):
-        self.cmd_(0x1d, "III", args)
+        self.cmd(0x1d, "III", args)
 
     def cmd_memcrc(self, *args):
-        self.cmd_(0x18, "III", args)
+        self.cmd(0x18, "III", args)
 
     def cmd_memset(self, *args):
-        self.cmd_(0x1b, "III", args)
+        self.cmd(0x1b, "III", args)
 
     def cmd_memwrite(self, *args):
-        self.cmd_(0x1a, "II", args)
+        self.cmd(0x1a, "II", args)
 
     def cmd_regwrite(self, ptr, val):
-        self.cmd_(0x1a, "III", (ptr, 4, val))
+        self.cmd(0x1a, "III", (ptr, 4, val))
 
     def cmd_memzero(self, *args):
-        self.cmd_(0x1c, "II", args)
+        self.cmd(0x1c, "II", args)
 
     def cmd_number(self, *args):
-        self.cmd_(0x2e, "hhhHi", args)
+        self.cmd(0x2e, "hhhHi", args)
 
     def cmd_progress(self, *args):
-        self.cmd_(0x0f, "hhhhHHI", args)
+        self.cmd(0x0f, "hhhhHHI", args)
 
     def cmd_regread(self, *args):
-        self.cmd_(0x19, "II", args)
+        self.cmd(0x19, "II", args)
 
     def cmd_rotate(self, a):
-        self.cmd_(0x29, "i", (furmans(a), ))
+        self.cmd(0x29, "i", (furmans(a), ))
 
     def cmd_scale(self, sx, sy):
-        self.cmd_(0x28, "ii", (f16(sx), f16(sy)))
+        self.cmd(0x28, "ii", (f16(sx), f16(sy)))
 
     def cmd_screensaver(self):
         self.cmd0(0x2f)
 
     def cmd_scrollbar(self, *args):
-        self.cmd_(0x11, "hhhhHHHH", args)
+        self.cmd(0x11, "hhhhHHHH", args)
 
     def cmd_setfont(self, *args):
-        self.cmd_(0x2b, "II", args)
+        self.cmd(0x2b, "II", args)
 
     def cmd_setmatrix(self):
         self.cmd0(0x2a)
 
     def cmd_sketch(self, *args):
-        self.cmd_(0x30, "hhHHII", args)
+        self.cmd(0x30, "hhHHII", args)
 
     def cmd_slider(self, *args):
-        self.cmd_(0x10, "hhhhHHI", args)
+        self.cmd(0x10, "hhhhHHI", args)
 
     def cmd_snapshot2(self, *args):
-        self.cmd_(0x37, "IIhhhh", args)
+        self.cmd(0x37, "IIhhhh", args)
 
     def cmd_snapshot(self, *args):
-        self.cmd_(0x1f, "I", args)
+        self.cmd(0x1f, "I", args)
 
     def cmd_spinner(self, *args):
-        self.cmd_(0x16, "hhHH", args)
+        self.cmd(0x16, "hhHH", args)
 
     def cmd_stop(self):
         self.cmd0(0x17)
@@ -164,57 +157,57 @@ class EVEH:
         self.cmd0(0x01)
 
     def cmd_text(self, *args):
-        self.cmd_(0x0c, "hhhH", args[0:4])
+        self.cmd(0x0c, "hhhH", args[0:4])
         self.fstring(args[4:])
 
     def cmd_toggle(self, *args):
-        self.cmd_(0x12, "hhhhHH", args[0:6])
+        self.cmd(0x12, "hhhhHH", args[0:6])
         self.fstring(args[6:])
 
     def cmd_touch_transform(self, *args):
-        self.cmd_(0x20, "iiiiiiiiiiiiI", args)
+        self.cmd(0x20, "iiiiiiiiiiiiI", args)
 
     def cmd_track(self, *args):
-        self.cmd_(0x2c, "hhhhi", args)
+        self.cmd(0x2c, "hhhhi", args)
 
     def cmd_translate(self, tx, ty):
-        self.cmd_(0x27, "ii", (f16(tx), f16(ty)))
+        self.cmd(0x27, "ii", (f16(tx), f16(ty)))
 
     #
     # The new 810 commands
     #
 
     def cmd_romfont(self, *args):
-        self.cmd_(0x3f, "II", args)
+        self.cmd(0x3f, "II", args)
 
     def cmd_mediafifo(self, *args):
-        self.cmd_(0x39, "II", args)
+        self.cmd(0x39, "II", args)
 
     def cmd_sync(self):
         self.cmd0(0x42)
 
     def cmd_setrotate(self, *args):
-        self.cmd_(0x36, "I", args)
+        self.cmd(0x36, "I", args)
 
     def cmd_setbitmap(self, *args):
-        self.cmd_(0x43, "IHhi", args)
+        self.cmd(0x43, "IHhi", args)
 
     def cmd_setfont2(self, *args):
-        self.cmd_(0x3b, "III", args)
+        self.cmd(0x3b, "III", args)
 
     def cmd_videoframe(self, *args):
-        self.cmd_(0x41, "II", args)
+        self.cmd(0x41, "II", args)
 
     def cmd_videostart(self):
-        self.cmd_(0x40, "", ())
+        self.cmd(0x40, "", ())
 
     def cmd_videostartf(self):
-        self.cmd_(0x5f, "", ())
+        self.cmd(0x5f, "", ())
 
     # def cmd_snapshot2(self, 
     # def cmd_playvideo(self, 
     def cmd_setscratch(self, *args):
-        self.cmd_(0x3c, "I", args)
+        self.cmd(0x3c, "I", args)
 
     # def cmd_sync(self, 
     # def cmd_setbitmap(self, 
@@ -224,23 +217,23 @@ class EVEH:
     #
 
     def cmd_setbase(self, *args):
-        self.cmd_(0x38, "I", args)
+        self.cmd(0x38, "I", args)
 
-    def cmd_rotatearound(self, x, y, a, s):
-        self.cmd_(0x51, "iiii", (x, y, furmans(a), f16(s)))
+    def cmd_rotatearound(self, x, y, a, s = 1):
+        self.cmd(0x51, "iiii", (x, y, furmans(a), f16(s)))
 
     def cmd_flasherase(self):
         self.cmd0(0x44)
 
     def cmd_flashwrite(self, a, b):
-        self.cmd_(0x45, "II", (a, len(b)))
+        self.cmd(0x45, "II", (a, len(b)))
         self.cc(b)
 
     def cmd_flashupdate(self, *args):
-        self.cmd_(0x47, "III", args)
+        self.cmd(0x47, "III", args)
 
     def cmd_flashread(self, *args):
-        self.cmd_(0x46, "III", args)
+        self.cmd(0x46, "III", args)
 
     def cmd_flashdetach(self):
         self.cmd0(0x48)
@@ -249,22 +242,22 @@ class EVEH:
         self.cmd0(0x49)
 
     def cmd_flashfast(self):
-        self.cmd_(0x4a, "I", (0xdeadbeef,))
+        self.cmd(0x4a, "I", (0xdeadbeef,))
 
     def cmd_flashspidesel(self):
         self.cmd0(0x4b)
 
     def cmd_flashsource(self, *args):
-        self.cmd_(0x4e, "I", args)
+        self.cmd(0x4e, "I", args)
 
     def cmd_inflate2(self, *args):
-        self.cmd_(0x50, "II", args)
+        self.cmd(0x50, "II", args)
 
     def cmd_appendf(self, *args):
-        self.cmd_(0x59, "II", args)
+        self.cmd(0x59, "II", args)
 
     def cmd_animframe(self, *args):
-        self.cmd_(0x5a, "hhII", args)
+        self.cmd(0x5a, "hhII", args)
 
     def cmd_nop(self):
         self.cmd0(0x5b)

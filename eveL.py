@@ -2,14 +2,6 @@ import struct
 
 class EVEL:
 
-    def __init__(self, arch = '815'):
-        self.buf = b''
-        self.set_arch(arch)
-
-    def set_arch(self, arch):
-        assert arch in ('800', '810', '815')
-        self.arch = arch
-
     def cc(self, s):
         assert (len(s) % 4) == 0
         self.buf += s
@@ -18,6 +10,7 @@ class EVEL:
             self.buf = self.buf[512:]
 
     def register(self, sub):
+        self.buf = b''
         getattr(sub, 'write') # Confirm that there is a write method
 
     def flush(self):
@@ -27,6 +20,14 @@ class EVEL:
     def c4(self, i):
         """Send a 32-bit value to the GD2."""
         self.cc(struct.pack("I", i))
+
+    def cmd0(self, num):
+        self.c4(0xffffff00 | num)
+
+    def cmd_(self, num, fmt, args):
+        self.c4(0xffffff00 | num)
+        self.cc(struct.pack(fmt, *args))
+
 
     # The basic graphics instructions
 
@@ -96,15 +97,9 @@ class EVEL:
         self.c4((34 << 24))
 
     def ScissorSize(self, width,height):
-        if self.arch == '800':
-            self.c4((28 << 24) | ((width & 1023) << 10) | ((height & 1023)))
-        else:
-            self.c4((28 << 24) | ((width & 4095) << 12) | ((height & 4095)))
+        self.c4((28 << 24) | ((width & 4095) << 12) | ((height & 4095)))
     def ScissorXY(self, x,y):
-        if self.arch == '800':
-            self.c4((27 << 24) | ((x & 511) << 9) | ((y & 511)))
-        else:
-            self.c4((27 << 24) | ((x & 2047) << 11) | ((y & 2047)))
+        self.c4((27 << 24) | ((x & 2047) << 11) | ((y & 2047)))
 
     def StencilFunc(self, func,ref,mask):
         self.c4((10 << 24) | ((func & 7) << 16) | ((ref & 255) << 8) | ((mask & 255)))
