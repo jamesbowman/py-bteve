@@ -1,6 +1,5 @@
 import time
 import gameduino as GD
-import t_micropython
 import math
 
 def blinka(eve):
@@ -22,11 +21,11 @@ def blinka(eve):
         eve.Vertex2f(0, 0)
 
         eve.BitmapHandle(1)                 # Ten Blinkas, 36 degrees apart
-        N = 20
+        N = 10
         for i in range(N):
             angle = 360 * i / N + t
             eve.cmd_loadidentity()
-            eve.cmd_rotate_around(50, 50, angle)
+            eve.cmd_rotatearound(50, 50, angle)
             eve.cmd_setmatrix()
             th = math.radians(-angle)
             x = r * math.sin(th)
@@ -34,6 +33,7 @@ def blinka(eve):
             eve.Vertex2f(240 - 50 + x, 136 - 50 + y)
         eve.swap()
 
-eve = GD.Gameduino(t_micropython.SPI())
+from gameduino_circuitpython import GameduinoCircuitPython
+eve = GameduinoCircuitPython()
 eve.init()
 blinka(eve)

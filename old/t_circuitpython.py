@@ -4,14 +4,14 @@ import digitalio
 
 class SPI:
     def __init__(self):
-        self.cs = digitalio.DigitalInOut(board.D2)
+        self.cs = digitalio.DigitalInOut(board.D8)
         self.cs.direction = digitalio.Direction.OUTPUT
         self.cs.value = True
 
-        self.sp = busio.SPI(board.SCK, MOSI=board.MOSI, MISO=board.MISO)
+        self.sp = busio.SPI(board.D13, MOSI=board.D11, MISO=board.D12)
         while not self.sp.try_lock():
             pass
-        self.sp.configure(baudrate=10000000, phase=0, polarity=0)
+        self.sp.configure(baudrate=15000000, phase=0, polarity=0)
 
     def transfer(self, wr, rd = 0):
         self.cs.value = False
