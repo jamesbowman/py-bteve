@@ -1,6 +1,7 @@
 import time
 import gameduino as GD
 import math
+import random
 
 def blinka(eve):
     eve.BitmapHandle(0)
@@ -33,7 +34,25 @@ def blinka(eve):
             eve.Vertex2f(240 - 50 + x, 136 - 50 + y)
         eve.swap()
 
+def fizz(eve):
+    rr = random.randrange
+    while True:
+        eve.Clear(1, 1, 1)
+        eve.Begin(GD.POINTS)
+        # random.seed(7)
+        # eve.finish()
+
+        t0 = eve.rd32(GD.REG_CLOCK)
+        for i in range(100):
+            eve.ColorRGB(rr(256), rr(256), rr(256))
+            eve.PointSize(100 + rr(900))
+            eve.Vertex2f(rr(480), rr(272))
+
+        t1 = eve.rd32(GD.REG_CLOCK)
+        print('took', 1000 * (0xffffffff & (t1 - t0)) / 60e6, 'ms')
+        eve.swap()
+
 from gameduino_circuitpython import GameduinoCircuitPython
 eve = GameduinoCircuitPython()
 eve.init()
-blinka(eve)
+fizz(eve)
