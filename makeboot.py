@@ -11,7 +11,7 @@ from itertools import groupby
 def gentext(s):
     fn = "../../.fonts/IBMPlexSans-SemiBold.otf"
     fn = "../../.fonts/Arista-Pro-Alternate-Light-trial.ttf"
-    font = ImageFont.truetype(fn, 220)
+    font = ImageFont.truetype(fn, 250)
     im = Image.new("L", (2000, 1000))
     draw = ImageDraw.Draw(im)
     draw.text((200, 200), s, font=font, fill = 255)
@@ -154,27 +154,51 @@ def poweron():
     gd.cc(align4(open("gameduino.png", "rb").read()))
     gd.BitmapSize(gd3.NEAREST, gd3.BORDER, gd3.BORDER, 0, 0)
 
-    gd.ClearColorRGB(0x20, 0x00, 0x00)
-    gd.Clear()
-    gd.Begin(gd3.BITMAPS)
+    H = 0x60
+    grid = Image.frombytes("L", (4, 4), bytes([
+        H, H, H, H,
+        H, 0, 0, 0,
+        H, 0, 0, 0,
+        H, 0, 0, 0]))
+    buf = BytesIO()
+    grid.save(buf, "PNG")
+    gd.BitmapHandle(1)
+    gd.cmd_loadimage(-1, 0)
+    gd.cc(align4(buf.getvalue()))
+    gd.BitmapSize(gd3.BILINEAR, gd3.REPEAT, gd3.REPEAT, 0, 0)
 
     daz = gentext("dazzler")
     buf = BytesIO()
     daz.save(buf, "PNG")
-
-    gd.BitmapHandle(1)
+    gd.BitmapHandle(2)
     gd.cmd_loadimage(-1, 0)
     gd.cc(align4(buf.getvalue()))
+
+
+    gd.ClearColorRGB(0x20, 0x00, 0x00)
+    gd.Clear()
+    gd.Begin(gd3.BITMAPS)
 
     gd.SaveContext()
     gd.cmd_scale(3, 3)
     gd.cmd_setmatrix()
     gd.BitmapHandle(0)
-    gd.Vertex2f((1280 - 3*w) / 2, 0)
+    gd.Vertex2f((1280 - 3*w) / 2, 65)
     gd.RestoreContext()
 
+    gd.SaveContext()
+    gd.cmd_loadidentity()
+    gd.cmd_scale(0.75, 0.75)
+    gd.cmd_setmatrix()
+    gd.ColorRGB(0x20, 0x00, 0x00)
+
     gd.BitmapHandle(1)
-    (x, y) = ((1280 - daz.size[0]) / 2, 350)
+    gd.Vertex2f(0, 0)
+    gd.RestoreContext()
+
+    gd.BitmapHandle(2)
+    gd.ColorA(0xe0)
+    (x, y) = ((1280 - daz.size[0]) / 2, 400)
     gd.Vertex2f(x, y)
 
     gd.cmd_text(640, 690, 31, gd3.OPT_CENTER, "0.0.1")
@@ -252,9 +276,11 @@ def make_bootstream(poweron_stream):
             print(len(fl))
             s = sum(fl[:]) & 0xffff
             print("Expected checksum %04x" % s)
+            h.write("%x. fl.check \ expect %x\n" % (len(fl), s))
+            h.write("decimal\n")
 
 if __name__ == "__main__":
     make_bringup()
     po = poweron()
-    # trial(po)
+    trial(po)
     make_bootstream(po)
