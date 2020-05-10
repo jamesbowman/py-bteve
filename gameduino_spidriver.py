@@ -11,7 +11,7 @@ class GameduinoSPIDriver(gameduino.Gameduino):
         self.d.seta(1)
         self.d.setb(1)
 
-        if 1:
+        if 0:
             print('reset')
             self.d.setb(0)
             time.sleep(.1)

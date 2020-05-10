@@ -47,10 +47,10 @@ class Gameduino(_EVE, EVE):
         self.standard_startup()
 
     def coldstart(self):
-        self.host_cmd(0x61, 0x46)   # 72 MHz
+        # self.host_cmd(0x61, 0x46)   # 72 MHz
         self.host_cmd(0x48)         # int clock
         self.host_cmd(0x00)         # Wake up
-        # self.host_cmd(0x68)       # Core reset
+        self.host_cmd(0x68)         # Core reset
 
     def bringup(self):
         time.sleep(.4)
