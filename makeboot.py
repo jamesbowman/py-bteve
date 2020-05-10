@@ -1,12 +1,14 @@
 import textwrap
 import struct
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageChops
 from _eve import _EVE
 from eve import EVE, align4
 import registers as gd3
 import zlib
 from io import BytesIO
 from itertools import groupby
+
+__VERSION__ = "0.0.2"
 
 def gentext(s):
     fn = "../../.fonts/IBMPlexSans-SemiBold.otf"
@@ -15,6 +17,8 @@ def gentext(s):
     im = Image.new("L", (2000, 1000))
     draw = ImageDraw.Draw(im)
     draw.text((200, 200), s, font=font, fill = 255)
+    glow = im.filter(ImageFilter.GaussianBlur(10))
+    im = ImageChops.add(im, glow)
     return im.crop(im.getbbox())
 
 def trial(cmdbuf):
@@ -103,16 +107,11 @@ class Gameduino(_EVE, EVE):
             return
 
 def make_bringup():
-    gd0 = Gameduino()
-    gd0.cmd_regwrite(gd3.REG_FREQUENCY, 72000000)
-    gd0.setup_1280x720()
-    gd0.pack()
-
     gd = Gameduino()
     gd.setup_1280x720()
 
     gd.cmd_inflate(0)
-    img = open("unified.blob", "rb").read() + gd0.buf
+    img = open("unified.blob", "rb").read()
     c = align4(zlib.compress(img))
     gd.cc(c)
     gd.cmd_flashupdate(0, 0, 8192)
@@ -136,10 +135,10 @@ def make_bringup():
             y += Y
         gd.RestoreContext()
 
-        gd.cmd_text(640, y + 50, 31, gd3.OPT_CENTER, "All checks passed")
+        gd.cmd_text(640, 690, 31, gd3.OPT_CENTER, __VERSION__)
         gd.swap()
 
-    print('have', len(gd.buf), 'bytes')
+    print('bringup is', len(gd.buf), 'bytes')
     tb = " ".join([("%d c," % b) for b in gd.buf])
     with open("_bringup.fs", "wt") as f:
         f.write(textwrap.fill(tb, 127))
@@ -197,11 +196,11 @@ def poweron():
     gd.RestoreContext()
 
     gd.BitmapHandle(2)
-    gd.ColorA(0xe0)
-    (x, y) = ((1280 - daz.size[0]) / 2, 400)
+    gd.ColorA(0xf0)
+    (x, y) = ((1280 - daz.size[0]) / 2, 380)
     gd.Vertex2f(x, y)
 
-    gd.cmd_text(640, 690, 31, gd3.OPT_CENTER, "0.0.1")
+    gd.cmd_text(640, 690, 31, gd3.OPT_CENTER, __VERSION__)
 
     gd.swap()
     print('poweron is', len(gd.buf), 'bytes')
@@ -242,8 +241,8 @@ def make_bootstream(poweron_stream):
         gd.swap()
 
         fl = open("dazzler.bit", "rb").read()[96:]
-        # fl = fl.ljust(512 * 1024, b'\xff')
-        # fl += struct.pack("H", len(poweron_stream)) + poweron_stream
+        fl = fl.ljust(512 * 1024, b'\xff')
+        fl += struct.pack("HH", 0x947a, len(poweron_stream)) + poweron_stream
         with open("_loadflash.fs", "wt") as h:
             h.write(": m >spi ; hex\n")
             # r ( u n ) write u n times
