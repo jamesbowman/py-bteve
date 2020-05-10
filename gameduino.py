@@ -1,8 +1,8 @@
 import sys
 import time
 import struct
-from eveL import EVEL
-from eveH import EVEH
+from _eve import _EVE
+from eve import EVE
 from registers import *
 
 if sys.implementation.name != "circuitpython":
@@ -23,11 +23,15 @@ FIFO_MAX = const(0xffc)    # Maximum reported free space in the EVE command FIFO
 class CoprocessorException(Exception):
     pass
 
-class Gameduino(EVEL, EVEH):
+class Gameduino(_EVE, EVE):
     def init(self):
+        print('--->')
         self.register(self)
+        print('<---')
 
         self.coldstart()
+
+        # self.bringup()
 
         t0 = time.time()
         while self.rd32(REG_ID) != 0x7c:
@@ -47,6 +51,18 @@ class Gameduino(EVEL, EVEH):
         self.host_cmd(0x48)         # int clock
         self.host_cmd(0x00)         # Wake up
         # self.host_cmd(0x68)       # Core reset
+
+    def bringup(self):
+        time.sleep(.4)
+
+        while 1:
+            print()
+            self.d.sel()
+            for c in (0x30, 0x20, 0x00, 0xff, 0xff, 0xff):
+                r = self.d.writeread(bytes([c]))[0]
+                print("Sent %02x recv %02x" % (c, r))
+            self.d.unsel()
+            time.sleep(2)
 
     def host_cmd(self, a, b = 0, c = 0):
         self.transfer(bytes([a, b, c]))
