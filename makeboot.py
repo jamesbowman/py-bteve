@@ -244,7 +244,8 @@ def make_bootstream(poweron_stream):
         fl = fl.ljust(512 * 1024, b'\xff')
         fl += struct.pack("HH", 0x947a, len(poweron_stream)) + poweron_stream
         with open("_loadflash.fs", "wt") as h:
-            h.write(": m >spi ; hex\n")
+            h.write("manufacturer hex\n")
+            h.write(": m >spi ;\n")
             # r ( u n ) write u n times
             h.write(": r 0 do dup >spi loop drop ;\n")
             def addr(a):
