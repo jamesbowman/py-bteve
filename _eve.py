@@ -111,6 +111,10 @@ class _EVE:
         self.c4((20 << 24) | ((mask & 1)))
     def Tag(self, s):
         self.c4((3 << 24) | ((s & 255)))
+    def Vertex2f_1(self, x, y):
+        x = int(x)
+        y = int(y)
+        self.c4(0x40000000 | ((x & 32767) << 15) | (y & 32767))
     def Vertex2f_2(self, x, y):
         x = int(2 * x)
         y = int(2 * y)
@@ -136,7 +140,7 @@ class _EVE:
     def VertexFormat(self, frac):
         self.c4((39 << 24) | (frac & 7))
         self.Vertex2f = [
-            self.Vertex2f_2,
+            self.Vertex2f_1,
             self.Vertex2f_2,
             self.Vertex2f_4,
             self.Vertex2f_8,
