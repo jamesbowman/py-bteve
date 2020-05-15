@@ -21,7 +21,7 @@ def gentext(s):
     im = ImageChops.add(im, glow)
     return im.crop(im.getbbox())
 
-def trial(cmdbuf):
+def preview(cmdbuf):
     from gameduino_spidriver import GameduinoSPIDriver
     gd = GameduinoSPIDriver()
     gd.init()
@@ -173,7 +173,6 @@ def poweron():
     gd.cmd_loadimage(-1, 0)
     gd.cc(align4(buf.getvalue()))
 
-
     gd.ClearColorRGB(0x20, 0x00, 0x00)
     gd.Clear()
     gd.Begin(gd3.BITMAPS)
@@ -282,5 +281,5 @@ def make_bootstream(poweron_stream):
 if __name__ == "__main__":
     make_bringup()
     po = poweron()
-    trial(po)
+    # preview(po)
     make_bootstream(po)
