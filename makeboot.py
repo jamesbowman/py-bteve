@@ -8,7 +8,7 @@ import zlib
 from io import BytesIO
 from itertools import groupby
 
-__VERSION__ = "0.0.2"
+__VERSION__ = "0.0.3"
 
 def gentext(s):
     fn = "../../.fonts/IBMPlexSans-SemiBold.otf"
@@ -114,7 +114,7 @@ def make_bringup():
     img = open("unified.blob", "rb").read()
     c = align4(zlib.compress(img))
     gd.cc(c)
-    gd.cmd_flashupdate(0, 0, 8192)
+    gd.cmd_flashupdate(0, 0, 4096)
     gd.cmd_flashfast()
 
     if 1:
@@ -135,6 +135,7 @@ def make_bringup():
             y += Y
         gd.RestoreContext()
 
+        gd.cmd_text(320, 500, 31, gd3.OPT_CENTER, "flash U2: ")
         gd.cmd_text(640, 690, 31, gd3.OPT_CENTER, __VERSION__)
         gd.swap()
 
@@ -249,13 +250,14 @@ def make_bootstream(poweron_stream):
             h.write(": r 0 do dup >spi loop drop ;\n")
             def addr(a):
                 return "%x m %x m %x m " % (0xff & (a >> 16), 0xff & (a >> 8), 0xff & a)
+            fl = fl[:]
             for i in range(0, len(fl), 4096):
-                h.write("$20 wcmd " + addr(i) + "notbusy \ %d\n" % (i / 1000))
+                h.write("20 wcmd " + addr(i) + "notbusy \ %#x\n" % i)
                 pg = fl[i:i+4096]
                 for j in range(0, len(pg), 256):
                     s = pg[j:j+256]
                     if set(s) != {0xff}:
-                        h.write("$02 wcmd " + addr(i + j) + "\n")
+                        h.write("02 wcmd " + addr(i + j) + "\ %#x \n" % (i + j))
                         if 1:
                             l = []
                             while s:
@@ -268,15 +270,28 @@ def make_bootstream(poweron_stream):
                                     s = s[1:]
                                     l.append("%x m" % c)
                             l.append("notbusy")
-                            h.write(textwrap.fill(" ".join(l), 127) + "\n")
+                            h.write(textwrap.fill(" ".join(l), 126) + "\n")
                         else:
                             h.write(textwrap.fill(" ".join(["%x m" % c for c in s]), 127))
                             h.write("\nnotbusy\n")
             print(len(fl))
             s = sum(fl[:]) & 0xffff
             print("Expected checksum %04x" % s)
-            h.write("%x. fl.check \ expect %x\n" % (len(fl), s))
+            with open("flash.bin", "wb") as f:
+                f.write(fl)
+            checkline = "$%x. fl.check \ expect %x\n" % (len(fl), s)
+            print(checkline)
+            h.write(checkline)
             h.write("decimal\n")
+
+            if 0:
+                with open("dump.hex", "wt") as f:
+                    for i in range(0x26000, 0x28000, 16):
+                        f.write("%04X  " % (i & 0xffff))
+                        for j in range(16):
+                            c = fl[i + j]
+                            f.write("%02X " % c)
+                        f.write("\n")
 
 if __name__ == "__main__":
     make_bringup()
