@@ -110,14 +110,16 @@ def make_bringup():
     gd = Gameduino()
     gd.setup_1280x720()
 
-    gd.cmd_inflate(0)
+    blob_addr = 0x8000
+    gd.cmd_inflate(blob_addr)
     img = open("unified.blob", "rb").read()
     c = align4(zlib.compress(img))
     gd.cc(c)
-    gd.cmd_flashupdate(0, 0, 4096)
+    gd.cmd_flashupdate(0, blob_addr, 4096)
     gd.cmd_flashfast()
 
     if 1:
+        gd.VertexFormat(0)
         gd.ClearColorRGB(0xff, 0xff, 0xff)
         gd.SaveContext()
         gd.Clear()
@@ -127,7 +129,7 @@ def make_bringup():
         gd.Clear()
 
         (x0, x1) = (20, 1280 - 20)
-        (y, H, Y) = (20, 80, 120)
+        (y, H, Y) = (20, 50, 120)
         for i,(cname, rgb) in enumerate([("red", 0xff0000), ("green", 0xff00), ("blue", 0xff), ("white", 0xffffff)]):
             gd.ScissorSize(x1 - x0, H)
             gd.ScissorXY(x0, y)
@@ -135,7 +137,19 @@ def make_bringup():
             y += Y
         gd.RestoreContext()
 
-        gd.cmd_text(320, 500, 31, gd3.OPT_CENTER, "flash U2: ")
+        gd.cmd_setbitmap(0, gd3.RGB332, 1, 1)
+        gd.BitmapSize(gd3.NEAREST, gd3.REPEAT, gd3.REPEAT, 40, 40)
+
+        def part(i, name):
+            x = 200 + 300 * (i // 2)
+            y = 500 + 70 * (i % 2)
+            gd.cmd_text(x, y, 31, 0, name + "")
+            gd.Cell(i)
+            gd.Vertex2f(x + 220, y + 5)
+        tests = ["flash  U2", "flash  U4", "    AUDIO"]
+        [part(i, n) for (i, n) in enumerate(tests)]
+        gd.cmd_memset(0, 0b01001001, len(tests)) # all gray initially
+
         gd.cmd_text(640, 690, 31, gd3.OPT_CENTER, __VERSION__)
         gd.swap()
 
@@ -143,6 +157,7 @@ def make_bringup():
     tb = " ".join([("%d c," % b) for b in gd.buf])
     with open("_bringup.fs", "wt") as f:
         f.write(textwrap.fill(tb, 127))
+    return gd.buf
 
 def poweron():
     gd = Gameduino()
@@ -294,7 +309,7 @@ def make_bootstream(poweron_stream):
                         f.write("\n")
 
 if __name__ == "__main__":
-    make_bringup()
+    br = make_bringup()
     po = poweron()
-    # preview(po)
+    # preview(br)
     make_bootstream(po)
