@@ -7,6 +7,11 @@ import registers as gd3
 import zlib
 from io import BytesIO
 from itertools import groupby
+from gameduino2.convert import convert
+import random
+
+random.seed(7)
+rr = random.randrange
 
 __VERSION__ = "0.0.3"
 
@@ -221,6 +226,116 @@ def poweron():
     print('poweron is', len(gd.buf), 'bytes')
     return gd.buf
 
+def make_textmode():
+    font = ImageFont.truetype("../../.fonts/IBMPlexMono-Text.otf", 21)
+    ch = [chr(i) for i in range(32, 127)]
+
+    im = Image.new("L", (256, 256))
+    draw = ImageDraw.Draw(im)
+    for c in ch:
+        draw.text((128, 128), c, font=font, fill=255)
+    (x0, y0, _, _) = im.getbbox()
+    print(128 - x0, 128 - y0)
+    im = im.crop(im.getbbox())
+    print(im)
+    im.save("out.png")
+
+    (w, h) = im.size
+    im = Image.new("L", (w, h))
+    draw = ImageDraw.Draw(im)
+    for c in ch:
+        draw.text((128 - x0, 128 - y0), c, font=font, fill=255)
+    im = im.crop(im.getbbox())
+    print(im)
+    im.save("out.png")
+
+    fim = Image.new("L", (w, h * 96))
+    draw = ImageDraw.Draw(fim)
+    for i,c in enumerate(ch):
+        draw.text((128 - x0, (128 - y0) + (h * i)), c, font=font, fill=255)
+    fim.save("fim.png")
+
+    gd = Gameduino()
+
+    def size(a, b):
+        gd.BitmapSize(gd3.NEAREST, gd3.BORDER, gd3.BORDER, a, b)
+        gd.BitmapSizeH(a >> 9, b >> 9)
+
+    gd.cmd_inflate(0)
+    c = align4(zlib.compress(fim.tobytes()))
+    gd.cc(c)
+
+    w2 = w + 1
+    h2 = h * 28 // 22
+    (W, H) = (1280 // w2, 720 // h2)
+    print('font size', (w, h, h2), 'screen size', (W, H))
+    print('font bytes', len(fim.tobytes()))
+
+    gd.BitmapHandle(0)
+    fb = 0x10000
+    gd.cmd_setbitmap(fb, gd3.L8, w, 720)
+    gd.cmd_memset(fb, 0x00, 1280 * 720)
+
+    gd.BitmapHandle(1)
+    cm = 0x8000
+    gd.cmd_setbitmap(cm, gd3.RGB565, 1, H)
+    size(w, H * h2)
+    b = bytes([rr(256) for i in range(2 * W * H)])
+    gd.cmd_memwrite(cm, len(b))
+    gd.cc(align4(b))
+
+    def caddr(x, y):
+        return fb + y * (w * h2) + (x * w * 720)
+    def aaddr(x, y):
+        return cm + 2 * (y + H * x)
+    def drawch(x, y, c, color = 0xffff):
+        dst = caddr(x, y)
+        src = (ord(c) - 0x20) * (w * h)
+        gd.cmd_memcpy(dst, src, (w * h))
+        # gd.cmd_memset(dst, 0xff, (w * h))
+
+        gd.cmd_memwrite(cm + 2 * (y + H * x), 2)
+        gd.cc(struct.pack("<I", color))
+
+    gd.setup_1280x720()
+
+    offset = 24
+    ht = H * h2
+    vh = ((H - offset) * h2)
+
+    gd.cmd_memwrite(gd3.REG_MACRO_0, 4)
+    gd.VertexTranslateY(vh << 4)
+
+    gd.VertexFormat(0)
+    gd.Clear()
+    gd.Begin(gd3.BITMAPS)
+    gd.BlendFunc(1, 0)
+    gd.BitmapHandle(0)
+    def drawtwice():
+        gd.Macro(0)
+        for i in range(1280 // w2):
+            gd.Cell(i)
+            gd.Vertex2f(w2 * i, -ht)
+            gd.Vertex2f(w2 * i, 0)
+    drawtwice()
+
+    gd.BitmapHandle(1)
+    gd.BitmapTransformA(32768 // w2 + 1, 1)
+    gd.BitmapTransformE(32768 // h2 + 1, 1)
+    gd.BlendFunc(gd3.DST_ALPHA, 0)
+    drawtwice()
+
+    gd.swap()
+
+    for i in range(1000):
+        drawch(rr(W), rr(H), chr(rr(33, 0x7f)), rr(65536))
+    for i in range(25):
+        s = "[{0}]".format(i)
+        for j,c in enumerate(s):
+            drawch(i + j, i, c, 0xffff)
+
+    return gd.buf
+
 def make_bootstream(poweron_stream):
     gd = Gameduino()
     gd.setup_1280x720()
@@ -311,5 +426,6 @@ def make_bootstream(poweron_stream):
 if __name__ == "__main__":
     br = make_bringup()
     po = poweron()
-    # preview(br)
-    make_bootstream(po)
+    te = make_textmode()
+    preview(te)
+    # make_bootstream(po)
