@@ -27,6 +27,7 @@ def gentext(s):
     return im.crop(im.getbbox())
 
 def preview(cmdbuf):
+    print('preview is', len(cmdbuf), 'bytes')
     from gameduino_spidriver import GameduinoSPIDriver
     gd = GameduinoSPIDriver()
     gd.init()
@@ -253,7 +254,6 @@ def make_textmode():
     draw = ImageDraw.Draw(fim)
     for i,c in enumerate(ch):
         draw.text((128 - x0, (128 - y0) + (h * i)), c, font=font, fill=255)
-    fim.save("fim.png")
 
     gd = Gameduino()
 
@@ -269,10 +269,12 @@ def make_textmode():
     h2 = h * 28 // 22
     (W, H) = (1280 // w2, (720 // h2) + 1)
     ht = H * h2
-    bar = (720 - (H - 1) * h2) // 2
+    y_bar = (720 - (H - 1) * h2) // 2
+    x_bar = (1280 - (W * w2)) // 2
 
-    print('font size', (w, h, h2), 'screen size', (W, H - 1))
+    print('font size', (w, h), (w2, h2), 'screen size', (W, H - 1))
     print('font bytes', len(fim.tobytes()))
+    print('bars:', (x_bar, y_bar))
     print(w * W * h2 * H)
 
     gd.BitmapHandle(0)
@@ -283,7 +285,7 @@ def make_textmode():
     gd.BitmapHandle(1)
     cm = 0x8000
     gd.cmd_setbitmap(cm, gd3.RGB565, 1, H)
-    size(w, ht)
+    size(w2, ht)
     b = bytes([rr(256) for i in range(2 * 2 * W * H)])
     gd.cmd_memwrite(cm, len(b))
     gd.cc(align4(b))
@@ -291,8 +293,8 @@ def make_textmode():
     def gaddr(x, y):
         return fb + y * (w * h2) + (x * w * ht)
     def caddr(x, y, z):
-        return cm + 2 * (y + H * x)
-    def drawch(x, y, c, color = 0xffff):
+        return cm + 2 * ((y + H * x) + z * (W * H))
+    def drawch(x, y, c, color = 0xffff, bg = 0x0000):
         dst = gaddr(x, y)
         src = (ord(c) - 0x20) * (w * h)
         gd.cmd_memcpy(dst, src, (w * h))
@@ -300,45 +302,63 @@ def make_textmode():
 
         gd.cmd_memwrite(caddr(x, y, 0), 2)
         gd.cc(struct.pack("<I", color))
+        gd.cmd_memwrite(caddr(x, y, 1), 2)
+        gd.cc(struct.pack("<I", bg))
 
     gd.setup_1280x720()
 
     offset = 1
-    vh = bar + ((H - offset) * h2)
+    vh = y_bar + ((H - offset) * h2)
+
+    def drawtwice(x):
+        gd.Macro(0)
+        if x:
+            yo = 0
+        else:
+            yo = (h2 - h) // 2
+        for i in range(1280 // w2):
+            gd.Cell(i)
+            gd.Vertex2f(x_bar + x + w2 * i, -ht + yo)
+            gd.Vertex2f(x_bar + x + w2 * i, 0 + yo)
+
+    def color_panel(z):
+        gd.SaveContext()
+        gd.BitmapHandle(1)
+        gd.BitmapSource(caddr(0, 0, z))
+        gd.BitmapTransformA(0, 1)
+        gd.BitmapTransformE(32768 // h2 + 1, 1)
+        drawtwice(-1)
+        gd.RestoreContext()
 
     gd.cmd_memwrite(gd3.REG_MACRO_0, 4)
     gd.VertexTranslateY(vh << 4)
 
     gd.VertexFormat(0)
-    gd.ClearColorRGB(33, 33, 33)
+    gd.ClearColorA(0)
+    # gd.ClearColorRGB(200, 200, 200)
     gd.Clear()
-    gd.ScissorXY(0, bar)
-    gd.ScissorSize(1280, (H - 1) * h2)
+    gd.ScissorXY(x_bar, y_bar)
+    gd.ScissorSize((W * w2), (H - 1) * h2)
     gd.Begin(gd3.BITMAPS)
+
+    gd.ColorMask(1, 1, 1, 0)
+    color_panel(1)
+
+    gd.ColorMask(0, 0, 0, 1)
     gd.BlendFunc(1, 0)
     gd.BitmapHandle(0)
-    def drawtwice():
-        gd.Macro(0)
-        for i in range(1280 // w2):
-            gd.Cell(i)
-            gd.Vertex2f(w2 * i, -ht)
-            gd.Vertex2f(w2 * i, 0)
-    drawtwice()
+    drawtwice(0)
 
-    gd.BitmapHandle(1)
-    gd.BitmapTransformA(32768 // w2 + 1, 1)
-    gd.BitmapTransformE(32768 // h2 + 1, 1)
-    gd.BlendFunc(gd3.DST_ALPHA, 0)
-    drawtwice()
+    gd.ColorMask(1, 1, 1, 0)
+    gd.BlendFunc(gd3.DST_ALPHA, gd3.ONE_MINUS_DST_ALPHA)
+    color_panel(0)
 
     gd.swap()
 
-    for i in range(1000):
-        drawch(rr(W), rr(H), chr(rr(33, 0x7f)), rr(65536))
     for i in range(H):
         s = "[{0}]".format(i)
         for j,c in enumerate(s):
-            drawch(i + j, i, c, 0xffff)
+            drawch(i + j, i, c, 0xffff, 0x1010)
 
     return gd.buf
 
