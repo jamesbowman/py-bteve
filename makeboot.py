@@ -265,49 +265,55 @@ def make_textmode():
     c = align4(zlib.compress(fim.tobytes()))
     gd.cc(c)
 
-    w2 = w + 1
+    w2 = w + 2
     h2 = h * 28 // 22
-    (W, H) = (1280 // w2, 720 // h2)
-    print('font size', (w, h, h2), 'screen size', (W, H))
+    (W, H) = (1280 // w2, (720 // h2) + 1)
+    ht = H * h2
+    bar = (720 - (H - 1) * h2) // 2
+
+    print('font size', (w, h, h2), 'screen size', (W, H - 1))
     print('font bytes', len(fim.tobytes()))
+    print(w * W * h2 * H)
 
     gd.BitmapHandle(0)
     fb = 0x10000
-    gd.cmd_setbitmap(fb, gd3.L8, w, 720)
-    gd.cmd_memset(fb, 0x00, 1280 * 720)
+    gd.cmd_setbitmap(fb, gd3.L8, w, ht)
+    gd.cmd_memset(fb, 0x00, W * w * ht)
 
     gd.BitmapHandle(1)
     cm = 0x8000
     gd.cmd_setbitmap(cm, gd3.RGB565, 1, H)
-    size(w, H * h2)
-    b = bytes([rr(256) for i in range(2 * W * H)])
+    size(w, ht)
+    b = bytes([rr(256) for i in range(2 * 2 * W * H)])
     gd.cmd_memwrite(cm, len(b))
     gd.cc(align4(b))
 
-    def caddr(x, y):
-        return fb + y * (w * h2) + (x * w * 720)
-    def aaddr(x, y):
+    def gaddr(x, y):
+        return fb + y * (w * h2) + (x * w * ht)
+    def caddr(x, y, z):
         return cm + 2 * (y + H * x)
     def drawch(x, y, c, color = 0xffff):
-        dst = caddr(x, y)
+        dst = gaddr(x, y)
         src = (ord(c) - 0x20) * (w * h)
         gd.cmd_memcpy(dst, src, (w * h))
         # gd.cmd_memset(dst, 0xff, (w * h))
 
-        gd.cmd_memwrite(cm + 2 * (y + H * x), 2)
+        gd.cmd_memwrite(caddr(x, y, 0), 2)
         gd.cc(struct.pack("<I", color))
 
     gd.setup_1280x720()
 
-    offset = 24
-    ht = H * h2
-    vh = ((H - offset) * h2)
+    offset = 1
+    vh = bar + ((H - offset) * h2)
 
     gd.cmd_memwrite(gd3.REG_MACRO_0, 4)
     gd.VertexTranslateY(vh << 4)
 
     gd.VertexFormat(0)
+    gd.ClearColorRGB(33, 33, 33)
     gd.Clear()
+    gd.ScissorXY(0, bar)
+    gd.ScissorSize(1280, (H - 1) * h2)
     gd.Begin(gd3.BITMAPS)
     gd.BlendFunc(1, 0)
     gd.BitmapHandle(0)
@@ -329,7 +335,7 @@ def make_textmode():
 
     for i in range(1000):
         drawch(rr(W), rr(H), chr(rr(33, 0x7f)), rr(65536))
-    for i in range(25):
+    for i in range(H):
         s = "[{0}]".format(i)
         for j,c in enumerate(s):
             drawch(i + j, i, c, 0xffff)
