@@ -290,10 +290,19 @@ def make_textmode():
     gd.cmd_memwrite(cm, len(b))
     gd.cc(align4(b))
 
+    gx = w * ht
+    gy = w * h2
+    wh = w * h
+    with open("_textmode.fs", "wt") as f:
+        for v in ("fb", "cm"):
+            f.write("$%x. 2constant %s\n" % (eval(v), v))
+        for v in ("H", "W", "gx", "gy", "wh"):
+            f.write("$%x constant %s\n" % (eval(v), v))
+
     def gaddr(x, y):
-        return fb + y * (w * h2) + (x * w * ht)
+        return fb + w * ((y * h2) + (x * ht))
     def caddr(x, y, z):
-        return cm + 2 * ((y + H * x) + z * (W * H))
+        return cm + 2 * (y + H * (x + z * W))
     def drawch(x, y, c, color = 0xffff, bg = 0x0000):
         dst = gaddr(x, y)
         src = (ord(c) - 0x20) * (w * h)
@@ -362,7 +371,7 @@ def make_textmode():
 
     return gd.buf
 
-def make_bootstream(poweron_stream):
+def make_bootstream(streams):
     gd = Gameduino()
     gd.setup_1280x720()
 
@@ -397,8 +406,16 @@ def make_bootstream(poweron_stream):
         gd.swap()
 
         fl = open("dazzler.bit", "rb").read()[96:]
+        print('dazzler bitstream', len(fl), len(zlib.compress(fl, 9)))
         fl = fl.ljust(512 * 1024, b'\xff')
-        fl += struct.pack("HH", 0x947a, len(poweron_stream)) + poweron_stream
+        fl += struct.pack("H", 0x947a)
+        for s in streams:
+            fl += struct.pack("I", len(s)) + s
+
+        with open("_loadflash.fs", "wt") as h:
+            h.write("CSPI\n")
+            h.write(": m >spi ;\n")
+
         with open("_loadflash.fs", "wt") as h:
             h.write("manufacturer hex\n")
             h.write(": m >spi ;\n")
@@ -453,5 +470,5 @@ if __name__ == "__main__":
     br = make_bringup()
     po = poweron()
     te = make_textmode()
-    preview(te)
-    # make_bootstream(po)
+    # preview(te)
+    make_bootstream([po, te])
