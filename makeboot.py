@@ -1,5 +1,6 @@
 import textwrap
 import struct
+import array
 from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageChops
 from _eve import _EVE
 from eve import EVE, align4
@@ -9,6 +10,9 @@ from io import BytesIO
 from itertools import groupby
 from gameduino2.convert import convert
 import random
+import binascii
+def crc(s):     # CRC-32 of string s
+    return binascii.crc32(s) & 0xffffffff
 
 random.seed(7)
 rr = random.randrange
@@ -406,15 +410,27 @@ def make_bootstream(streams):
         gd.swap()
 
         fl = open("dazzler.bit", "rb").read()[96:]
-        print('dazzler bitstream', len(fl), len(zlib.compress(fl, 9)))
         fl = fl.ljust(512 * 1024, b'\xff')
         fl += struct.pack("H", 0x947a)
         for s in streams:
             fl += struct.pack("I", len(s)) + s
 
-        with open("_loadflash.fs", "wt") as h:
-            h.write("CSPI\n")
-            h.write(": m >spi ;\n")
+        print('dazzler bitstream', len(fl), len(zlib.compress(fl, 9)))
+        with open("_loadflash2.fs", "wt") as h:
+            gd = Gameduino()
+            gd.cmd_inflate(0)
+            gd.cc(align4(zlib.compress(fl)))
+            gd.cmd_memcrc(0, len(fl), 0)
+            print('Expected CRC %x' % crc(fl))
+
+            h.write("0 MUX0 CSPI stream : m >spid ;\n")
+            db = array.array("I", gd.buf)
+            l = []
+            for x in db:
+                l += ["%x." % x, "m"]
+            l += ["result ( expect %08X ) " % crc(fl)]
+            h.write(textwrap.fill(" ".join(l), 127) + "\n")
+        return
 
         with open("_loadflash.fs", "wt") as h:
             h.write("manufacturer hex\n")
