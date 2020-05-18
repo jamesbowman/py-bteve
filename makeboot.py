@@ -423,13 +423,14 @@ def make_bootstream(streams):
             gd.cmd_memcrc(0, len(fl), 0)
             print('Expected CRC %x' % crc(fl))
 
-            h.write("0 MUX0 CSPI stream : m >spid ;\n")
+            h.write("0 MUX0 CSPI stream : m >spid ; hex\n")
             db = array.array("I", gd.buf)
             l = []
             for x in db:
                 l += ["%x." % x, "m"]
-            l += ["result ( expect %08X ) " % crc(fl)]
+            l += ["result"]
             h.write(textwrap.fill(" ".join(l), 127) + "\n")
+            h.write("( expect %08X )\n" % crc(fl))
         return
 
         with open("_loadflash.fs", "wt") as h:

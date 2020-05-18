@@ -18,6 +18,14 @@ class GameduinoSPIDriver(gameduino.Gameduino):
             self.d.setb(1)
 
         while 0:
+            self.d.sel()
+            self.d.unsel()
+
+        while 0:
+            self.d.setb(0)
+            self.d.setb(1)
+
+        while 0:
             self.d.unsel()
             self.d.seta(0)
             b = self.d.writeread(b'\x00' * 6)
@@ -25,18 +33,18 @@ class GameduinoSPIDriver(gameduino.Gameduino):
             print(b)
 
         while 0:
-            self.d.seta(0)
+            self.d.setb(0)
             b = self.d.writeread(b'\x00' * 24)
-            self.d.seta(1)
+            self.d.setb(1)
             print(" ".join(["%02x" % x for x in b]))
 
         while 0:
             print(self.controllers())
 
     def controllers(self):
-        self.d.seta(0)
+        self.d.setb(0)
         bb = self.d.writeread(b'\x00' * 24)
-        self.d.seta(1)
+        self.d.setb(1)
 
         def decode1(b):
             r4 = '. brt b+ bh b- blt bdd bdr'.split()
