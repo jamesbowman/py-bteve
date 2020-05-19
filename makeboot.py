@@ -17,7 +17,7 @@ def crc(s):     # CRC-32 of string s
 random.seed(7)
 rr = random.randrange
 
-__VERSION__ = "0.0.3"
+__VERSION__ = "0.1.0"
 
 def gentext(s):
     fn = "../../.fonts/IBMPlexSans-SemiBold.otf"
@@ -431,7 +431,14 @@ def make_bootstream(streams):
             l += ["result"]
             h.write(textwrap.fill(" ".join(l), 127) + "\n")
             h.write("( expect %08X )\n" % crc(fl))
-        return
+
+            s = sum(fl[:]) & 0xffff
+            print("Expected checksum %04x" % s)
+            h.write("$%x. e2fl\n" % (len(fl)))
+            h.write("$%x. fl.check \ expect %x\n" % (len(fl), s))
+            h.write("decimal\n")
+
+        # return
 
         with open("_loadflash.fs", "wt") as h:
             h.write("manufacturer hex\n")
