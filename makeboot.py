@@ -281,8 +281,8 @@ def poweron():
     return gd.buf
 
 def make_textmode():
-    font = ImageFont.truetype("../../.fonts/IBMPlexMono-Text.otf", 21)
-    ch = [chr(i) for i in range(32, 127)]
+    font = ImageFont.truetype("../../.fonts/IBMPlexMono-SemiBold.otf", 13)
+    ch = [chr(i) for i in range(32, 255)]
 
     im = Image.new("L", (256, 256))
     draw = ImageDraw.Draw(im)
@@ -295,18 +295,12 @@ def make_textmode():
     im.save("out.png")
 
     (w, h) = im.size
-    im = Image.new("L", (w, h))
-    draw = ImageDraw.Draw(im)
-    for c in ch:
-        draw.text((128 - x0, 128 - y0), c, font=font, fill=255)
-    im = im.crop(im.getbbox())
-    print(im)
-    im.save("out.png")
 
-    fim = Image.new("L", (w, h * 96))
+    fim = Image.new("L", (w, h * len(ch)))
     draw = ImageDraw.Draw(fim)
     for i,c in enumerate(ch):
         draw.text((128 - x0, (128 - y0) + (h * i)), c, font=font, fill=255)
+    fim.save("out.png")
 
     gd = Gameduino()
 
@@ -314,42 +308,48 @@ def make_textmode():
         gd.BitmapSize(gd3.NEAREST, gd3.BORDER, gd3.BORDER, a, b)
         gd.BitmapSizeH(a >> 9, b >> 9)
 
-    gd.cmd_inflate(0)
+    (sw, sh) = (720, 1280)
+    w2 = w + 1
+    h2 = h * 28 // 22
+    (W, H) = (sw // w2, (sh // h2) + 1)
+    ht = H * h2
+    y_bar = (sh - (H - 1) * h2) // 2
+    x_bar = (sw - (W * w2)) // 2
+
+    gx = w * ht             # glyph x term
+    gy = w * h2             # glyph y term
+    cx = 2 * H              # color x term
+    cz = 2 * H * W          # color z term
+    wh = w * h
+    sz = w * W * h2 * H
+
+    cm = 0
+    fm = cm + 2 * cz
+    fb = fm + len(fim.tobytes())
+
+    gd.cmd_inflate(fm)
     c = align4(zlib.compress(fim.tobytes()))
     gd.cc(c)
-
-    w2 = w + 2
-    h2 = h * 28 // 22
-    (W, H) = (1280 // w2, (720 // h2) + 1)
-    ht = H * h2
-    y_bar = (720 - (H - 1) * h2) // 2
-    x_bar = (1280 - (W * w2)) // 2
 
     print('font size', (w, h), (w2, h2), 'screen size', (W, H - 1))
     print('font bytes', len(fim.tobytes()))
     print('bars:', (x_bar, y_bar))
-    print(w * W * h2 * H)
 
     gd.BitmapHandle(0)
-    fb = 0x10000
     gd.cmd_setbitmap(fb, gd3.L8, w, ht)
     gd.cmd_memset(fb, 0x00, W * w * ht)
 
     gd.BitmapHandle(1)
-    cm = 0x8000
     gd.cmd_setbitmap(cm, gd3.RGB565, 1, H)
     size(w2, ht)
     b = bytes([rr(256) for i in range(2 * 2 * W * H)])
     gd.cmd_memwrite(cm, len(b))
     gd.cc(align4(b))
 
-    gx = w * ht
-    gy = w * h2
-    wh = w * h
     with open("_textmode.fs", "wt") as f:
-        for v in ("fb", "cm"):
+        for v in ("fm", "fb", "cm", "sz"):
             f.write("$%x. 2constant %s\n" % (eval(v), v))
-        for v in ("H", "W", "gx", "gy", "wh"):
+        for v in ("H", "W", "gx", "gy", "cx", "cz", "wh", "y_bar", "h2"):
             f.write("$%x constant %s\n" % (eval(v), v))
 
     def gaddr(x, y):
@@ -358,7 +358,7 @@ def make_textmode():
         return cm + 2 * (y + H * (x + z * W))
     def drawch(x, y, c, color = 0xffff, bg = 0x0000):
         dst = gaddr(x, y)
-        src = (ord(c) - 0x20) * (w * h)
+        src = fm + (ord(c) - 0x20) * (w * h)
         gd.cmd_memcpy(dst, src, (w * h))
         # gd.cmd_memset(dst, 0xff, (w * h))
 
@@ -368,8 +368,9 @@ def make_textmode():
         gd.cc(struct.pack("<I", bg))
 
     gd.setup_1280x720()
+    gd.cmd_setrotate(2)
 
-    offset = 1
+    offset = 0
     vh = y_bar + ((H - offset) * h2)
 
     def drawtwice(x):
@@ -378,7 +379,7 @@ def make_textmode():
             yo = 0
         else:
             yo = (h2 - h) // 2
-        for i in range(1280 // w2):
+        for i in range(sw // w2):
             gd.Cell(i)
             gd.Vertex2f(x_bar + x + w2 * i, -ht + yo)
             gd.Vertex2f(x_bar + x + w2 * i, 0 + yo)
@@ -391,6 +392,7 @@ def make_textmode():
         gd.BitmapTransformE(32768 // h2 + 1, 1)
         drawtwice(-1)
         gd.RestoreContext()
+
 
     gd.cmd_memwrite(gd3.REG_MACRO_0, 4)
     gd.VertexTranslateY(vh << 4)
@@ -566,4 +568,5 @@ if __name__ == "__main__":
     fa = make_fallback()
     # preview(fa)
     dump_include("_fallback.fs", fa)
+    # preview(te)
     make_bootstream([po, te])
