@@ -116,17 +116,70 @@ class Gameduino(_EVE, EVE):
             self.h = 720
             return
 
-def make_bringup():
+    def setup_640_480(self):
+        if 1:
+
+            self.Clear()
+            self.swap()
+            setup = [
+                # (gd3.REG_OUTBITS, 0),
+                (gd3.REG_DITHER, 0),
+                (gd3.REG_GPIO, 0x83),
+                (gd3.REG_CSPREAD, 0),
+                (gd3.REG_PCLK_POL, 0),
+                (gd3.REG_ADAPTIVE_FRAMERATE, 0),
+
+                (gd3.REG_HCYCLE, 800),
+                (gd3.REG_HOFFSET, 16 + 96),
+                (gd3.REG_HSIZE, 640),
+
+                (gd3.REG_HSYNC1, 0),
+                (gd3.REG_HSYNC0, 96),
+
+                (gd3.REG_VCYCLE, 525),
+                (gd3.REG_VOFFSET, 12),
+                (gd3.REG_VSIZE, 480),
+
+                (gd3.REG_VSYNC1, 0),
+                (gd3.REG_VSYNC0, 10),
+            ]
+            for (a, v) in setup:
+                self.cmd_regwrite(a, v)
+
+        if 0:
+            self.cmd_regwrite(gd3.REG_TRIM, 23)
+            self.cmd_regwrite(0x302614, 0x8c1)
+
+        self.cmd_regwrite(gd3.REG_PCLK, 3)
+        self.w = 640
+        self.h = 480
+
+def make_fallback():
     gd = Gameduino()
+    # gd.setup_640_480()
     gd.setup_1280x720()
 
+    gd.ClearColorRGB(0, 40, 0)
+    gd.Clear()
+    gd.cmd_text(100, 100, 31, 0, "FALLBACK")
+    gd.swap()
+
+    return gd.buf
+
+def make_flash():
+    gd = Gameduino()
     blob_addr = 0x8000
     gd.cmd_inflate(blob_addr)
     img = open("unified.blob", "rb").read()
-    c = align4(zlib.compress(img))
+    c = align4(zlib.compress(img, 9))
     gd.cc(c)
-    gd.cmd_flashupdate(0, blob_addr, 4096)
+    gd.cmd_flashupdate(0, blob_addr, 0x1000)
     gd.cmd_flashfast()
+    return gd.buf
+
+def make_bringup():
+    gd = Gameduino()
+    gd.setup_1280x720()
 
     if 1:
         gd.VertexFormat(0)
@@ -163,10 +216,6 @@ def make_bringup():
         gd.cmd_text(640, 690, 31, gd3.OPT_CENTER, __VERSION__)
         gd.swap()
 
-    print('bringup is', len(gd.buf), 'bytes')
-    tb = " ".join([("%d c," % b) for b in gd.buf])
-    with open("_bringup.fs", "wt") as f:
-        f.write(textwrap.fill(tb, 127))
     return gd.buf
 
 def poweron():
@@ -438,7 +487,7 @@ def make_bootstream(streams):
             h.write("$%x. fl.check \ expect %x\n" % (len(fl), s))
             h.write("decimal\n")
 
-        # return
+        return
 
         with open("_loadflash.fs", "wt") as h:
             h.write("manufacturer hex\n")
@@ -490,9 +539,31 @@ def make_bootstream(streams):
                             f.write("%02X " % c)
                         f.write("\n")
 
+def dump_include(filename, bb, op = ">spi"):
+    tb = " ".join([("%d %s" % (b, op)) for b in bb])
+    with open(filename, "wt") as f:
+        f.write("eve-start stream\n")
+        f.write(textwrap.fill(tb, 127))
+        f.write("\nfinish\n")
+
+def dump_init(filename, bb):
+    print(len(bb) / 4)
+    lc = len(bb) // 4
+    tb = " ".join([("%d %s" % (b, "c,")) for b in [lc] + list(bb)])
+    with open(filename, "wt") as f:
+        f.write(textwrap.fill(tb, 127))
+        f.write("\n")
+
 if __name__ == "__main__":
     br = make_bringup()
+    dump_init("_bringup.fs", br)
+
+    fl = make_flash()
+    dump_init("_flash.fs", fl)
+
     po = poweron()
     te = make_textmode()
-    # preview(te)
+    fa = make_fallback()
+    # preview(fa)
+    dump_include("_fallback.fs", fa)
     make_bootstream([po, te])
