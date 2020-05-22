@@ -294,7 +294,7 @@ class EVE:
         self.wr32(REG_SCREENSHOT_READ, 1)
 
         for ly in range(self.h):
-            print(ly)
+            print(ly, "/", self.h)
             self.wr32(REG_SCREENSHOT_Y, ly)
             self.wr32(REG_SCREENSHOT_START, 1)
             time.sleep(.002)
