@@ -17,10 +17,20 @@ rr = random.randrange
 class Instruments():
     xc = 1200
     def __init__(self, atlas, addr):
-        self.v = [rr(1000) for i in range(6)]
+        self.va = rr(1000)
+        self.ta = rr(1000)
+        self.t = 0
 
-    def run(self, gd):
+    def run0(self, gd):
         h = 720 + 144
         for i,v in enumerate(self.v):
             y = -72 + (i * h // 5)
             gd.cmd_gauge(self.xc, y, h // 12, gd3.OPT_FLAT, 4, 2, v, 1000)
+    
+    def run(self, gd):
+        if (self.t % 20) == 0:
+            self.ta = rr(1000)
+        e = self.ta - self.va
+        self.va += 0.1 * e
+        gd.cmd_gauge(858, 451, 180, gd3.OPT_FLAT, 4, 4, int(self.va), 1000)
+        self.t += 1

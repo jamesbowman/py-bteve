@@ -5,15 +5,17 @@ import zlib
 import dogfight
 
 if __name__ == '__main__':
-    from gameduino_spidriver import GameduinoSPIDriver
-    gd = GameduinoSPIDriver()
-
-    gd.init()
-
-    flashdata = bytes(8192)
+    flashdata = open("unified.blob", "rb").read() + bytes(4096)
     atlas = {}
     
     (flashdata, atlas) = dogfight.flash(flashdata, atlas)
+    flashdata = flashdata.ljust(2 ** 23, b'\xff')
+    open("flash.bin", "wb").write(flashdata)
+    sys.exit(0)
+
+    from gameduino_spidriver import GameduinoSPIDriver
+    gd = GameduinoSPIDriver()
+    gd.init()
 
     BLK = 2**16
     for i in range(8192, len(flashdata), BLK):

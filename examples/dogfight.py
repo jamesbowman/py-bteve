@@ -101,7 +101,7 @@ class Fighter:
 
     def draw(self, gd, ships, addr):
         v = self.vel.as_unit()
-        a = int(256 * math.atan2(-v.x, v.y) / (2 * math.pi)) & 0xfe
+        a = int(256 * math.atan2(-v.x, v.y) / (2 * math.pi)) & 0xff
         slot = addr + self.i * SZ
         gd.cmd_flashread(slot, 8192 + SZ * a, SZ)
 

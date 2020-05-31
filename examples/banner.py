@@ -10,6 +10,26 @@ from PIL import Image, ImageFont, ImageDraw, ImageChops
 import gameduino2.prep
 from gameduino2.convert import convert
 
+class LoggingGameduinoSPIDriver(GameduinoSPIDriver):
+    
+    def __init__(self):
+        GameduinoSPIDriver.__init__(self)
+
+        self.seq = 0
+        self.spool()
+
+    def spool(self):
+        self.cmd_dump = open("%04d.cmd" % self.seq, "wb")
+        self.seq += 1
+
+    def write(self, s):
+        GameduinoSPIDriver.write(self, s)
+        self.cmd_dump.write(s)
+
+    def swap(self):
+        GameduinoSPIDriver.swap(self)
+        self.spool()
+
 def gentext(s, h):
     fn = "../../.fonts/IBMPlexSans-SemiBold.otf"
     fn = "../../.fonts/Arista-Pro-Alternate-Light-trial.ttf"
@@ -56,8 +76,7 @@ if __name__ == "__main__":
         sys.exit(0)
     banner_pos = [(0, 0, 525, 713), (599, 188, 520, 525), (1192, 189, 498, 518), (1737, 189, 498, 518), (2321, 3, 212, 705), (2567, 189, 527, 525), (3164, 189, 314, 518)]
 
-
-    gd = GameduinoSPIDriver()
+    gd = LoggingGameduinoSPIDriver()
     gd.init()
     gd.cmd_flashfast()
 
@@ -65,23 +84,21 @@ if __name__ == "__main__":
     from instruments import Instruments
 
     a = 0
+    locs = []
     for i in range(7):
         gd.BitmapHandle(i)
         (bw, bh, d) = gameduino2.prep.astc_tile(open("%d.astc" % i, "rb"))
         gd.cmd_inflate(a)
         gd.cc(align4(zlib.compress(d)))
-        (x, y, w, h) = banner_pos[i]
-        print(i, w, h, bw, bh)
-        gd.cmd_setbitmap(a, gd3.ASTC_10x8, w, h)
-        gd.BitmapSwizzle(1, 1, 1, gd3.RED)
+        locs.append(a)
         a += len(d)
     print('used', a)
     dg = Dogfight({'ships' : 8192}, a)
     ins = Instruments({}, a)
 
-    time.sleep(4)
+    # time.sleep(4)
     for xo in range(-800, 2600, 4):
-    # for xo in range(600, 1000, 4):
+    # for xo in range(300, 1000, 4):
         print(xo)
         gd.VertexFormat(2)
         gd.Clear()
@@ -95,6 +112,8 @@ if __name__ == "__main__":
         for i in range(7):
             (x, y, w, h) = banner_pos[i]
             gd.BitmapHandle(i)
+            gd.cmd_setbitmap(locs[i], gd3.ASTC_10x8, w, h)
+            gd.BitmapSwizzle(1, 1, 1, gd3.RED)
             gd.Vertex2f(x, y)
         gd.RestoreContext()
 

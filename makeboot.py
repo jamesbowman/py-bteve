@@ -556,7 +556,19 @@ def dump_init(filename, bb):
         f.write(textwrap.fill(tb, 127))
         f.write("\n")
 
+def make_sector_1():
+    gd = Gameduino()
+    gd.setup_1280x720()
+    gd.pack()
+    print("Sector 1 CRC %08X" % crc(gd.buf))
+    cd = align4(zlib.compress(gd.buf, 9))
+    with open("_sector1.h", "wt") as f:
+        f.write(",".join([str(s) for s in cd]))
+        f.write("\n")
+
 if __name__ == "__main__":
+    make_sector_1()
+
     br = make_bringup()
     dump_init("_bringup.fs", br)
 
