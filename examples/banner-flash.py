@@ -11,7 +11,6 @@ if __name__ == '__main__':
     (flashdata, atlas) = dogfight.flash(flashdata, atlas)
     flashdata = flashdata.ljust(2 ** 23, b'\xff')
     open("flash.bin", "wb").write(flashdata)
-    sys.exit(0)
 
     from gameduino_spidriver import GameduinoSPIDriver
     gd = GameduinoSPIDriver()
