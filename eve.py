@@ -205,7 +205,10 @@ class EVE:
         self.cmd(0x5f, "", ())
 
     # def cmd_snapshot2(self, 
-    # def cmd_playvideo(self, 
+
+    def cmd_playvideo(self, *args):
+        self.cmd(0x3a, "I", args)
+
     def cmd_setscratch(self, *args):
         self.cmd(0x3c, "I", args)
 
