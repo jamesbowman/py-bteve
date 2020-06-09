@@ -1,12 +1,15 @@
 import sys
 import random
-from gameduino_spidriver import GameduinoSPIDriver
+import array
+import math
+
 import registers as gd3
 from PIL import Image, ImageFont, ImageDraw, ImageChops, ImageFilter
 from eve import align4, EVE
 import zlib
 import numpy as np
 from scipy.ndimage import gaussian_filter
+import common
 
 def gentext(s, h):
     fn = "../../.fonts/IBMPlexSans-SemiBold.otf"
@@ -58,15 +61,6 @@ class Loader:
 
 if __name__ == "__main__":
     dazzler_logo = gentext("dazzler", 300)
-    print(dazzler_logo)
-    f = 20
-    dz = dazzler_logo.resize((949 // f, 195 // f)).convert("1")
-    print(sum(dz.tobytes()) / 255)
-    dz.save("out.png")
-    pix = dz.load()
-    spots = [((x + 1.0) * f, (y + 1.0) * f) for x in range(dz.size[0]) for y in range(dz.size[1]) if pix[x, y]]
-    print((spots))
-
     (w, h) = dazzler_logo.size
 
     if 0:
@@ -83,7 +77,7 @@ if __name__ == "__main__":
         im.save("gaussblur.png")
         sys.exit(0)
 
-    gd = GameduinoSPIDriver()
+    gd = common.LoggingGameduinoSPIDriver()
     gd.init()
 
     ld = Loader(gd, 0)
@@ -112,11 +106,11 @@ if __name__ == "__main__":
     ld.L8(dazzler_logo)
 
     gd.BitmapHandle(4)
-    gr = 64
-    ld.L8(glow(gr))
-
-    gd.BitmapHandle(5)
     ld.L8(Image.open("gaussblur.png"))
+    gd.BitmapSize(gd3.BILINEAR, gd3.BORDER, gd3.BORDER, 1280, 720)
+    gd.BitmapSizeH(1280 >> 9, 720 >> 9)
+    gd.BitmapLayout(gd3.PALETTED8, 640, 360)
+    pal = (ld.a + 3) & ~3
 
     print(gd.rd32(gd3.REG_ADAPTIVE_FRAMERATE))
 
@@ -137,12 +131,24 @@ if __name__ == "__main__":
     for r in rr:
         print("%16s %d" % (r, gd.rd32(eval("gd3." + r))))
 
-    for i in range(1):
+    def loadramp(gd, pal, f):
+        scaled = [min(255, int(f * i)) for i in range(256)]
+        gd.wr(pal, array.array("I", scaled).tobytes())
+
+    if 0:
+        gd.ClearColorRGB(130, 30, 0)
+        gd.Clear()
+        gd.swap()
+        input()
+
+    for i in range(210):
+        gd.PaletteSource(pal)
+        gd.Nop()
         gd.VertexFormat(0)
         gd.Clear()
 
         gd.Begin(gd3.BITMAPS)
-        gd.ColorRGB(0, 0x20, 0x20)
+        gd.ColorRGB(0, 0x18, 0x20)
         gd.Vertex2ii(0, 0, 2, 0)
         gd.ColorRGB(0xff, 0xa5, 0x00)
 
@@ -157,20 +163,38 @@ if __name__ == "__main__":
             gd.RestoreContext()
 
         gd.BitmapHandle(1)
-        gd.Cell((3 * i) % 60)
+        gd.Cell((7 * i) % 60)
         gd.Vertex2f(0, 0)
 
-        gd.ColorRGB(255, 255, 255)
-        gd.Cell(0)
-        gd.BitmapHandle(3)
-        (ox, oy) = (640 - w / 2, 330 - h / 2)
-        gd.Vertex2f(ox, oy)
+        if 60 <= i:
+            gd.cmd_loadidentity()
+            sf = 0.01 + 0.99 * math.pow(min((i - 60), 30) / 30, 2)
+            gd.cmd_translate(w / 2, h / 2)
+            gd.cmd_scale(sf, sf)
+            gd.cmd_translate(-w / 2, -h / 2)
+            gd.cmd_setmatrix()
 
-        gd.BitmapHandle(4)
-        gd.ColorRGB(255, 0, 0)
-        gd.ColorA(255)
-        for (x, y) in spots[:]:
-            gd.Vertex2f(ox + x - gr, oy + y - gr)
-            # gd.Vertex2f(ox + x - gr, oy + y - gr)
+            g = 190
+            gd.ColorRGB(g, g, g)
+            gd.Cell(0)
+            gd.BitmapHandle(3)
+            (ox, oy) = (640 - w / 2, 330 - h / 2)
+            gd.Vertex2f(ox, oy)
+            gd.ColorRGB(255, 255, 255)
+
+        t = (i - 120)
+        if t > 0:
+            gd.cmd_loadidentity()
+            gd.cmd_scale(2.001, 2)
+            gd.cmd_setmatrix()
+
+            fac = math.tan(0.5 * math.pi * math.pow(min(t, 89) / 89, 1.1))
+            # fac = math.pow(i / 89, 6) * 255
+            # print(i, fac)
+            gd.cmd_memwrite(pal, 1024)
+            gd.cc(array.array("I", [min(255, int(i * fac)) for i in range(1, 257)]).tobytes())
+            gd.BlendFunc(1, 1)
+            gd.BitmapHandle(4)
+            gd.Vertex2f(0, 0)
 
         gd.swap()
