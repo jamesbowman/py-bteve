@@ -225,6 +225,8 @@ REG_MEDIAFIFO_BASE     = const(0x30901c)
 REG_MEDIAFIFO_READ     = const(0x309014) 
 REG_MEDIAFIFO_SIZE     = const(0x309020) 
 REG_MEDIAFIFO_WRITE    = const(0x309018) 
+REG_GPIOX              = const(0x30209c)
+REG_GPIOX_DIR          = const(0x302098)
 
 
 # 815 registers
