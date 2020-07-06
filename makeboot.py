@@ -206,10 +206,13 @@ def make_bringup():
         def part(i, name):
             x = 200 + 300 * (i // 2)
             y = 500 + 70 * (i % 2)
-            gd.cmd_text(x, y, 31, 0, name + "")
+            gd.cmd_text(x + 190, y, 31, gd3.OPT_RIGHTX, name + "")
             gd.Cell(i)
             gd.Vertex2f(x + 220, y + 5)
-        tests = ["flash  U2", "flash  U4", "    AUDIO"]
+        tests = ["flash U2",
+                 "flash U4",
+                 "EVE audio",
+                 "EVE quad"]
         [part(i, n) for (i, n) in enumerate(tests)]
         gd.cmd_memset(0, 0b01001001, len(tests)) # all gray initially
 
@@ -549,7 +552,7 @@ def dump_include(filename, bb, op = ">spi"):
         f.write("\nfinish\n")
 
 def dump_init(filename, bb):
-    print(len(bb) / 4)
+    print(filename, "is", len(bb) // 4)
     lc = len(bb) // 4
     tb = " ".join([("%d %s" % (b, "c,")) for b in [lc] + list(bb)])
     with open(filename, "wt") as f:
