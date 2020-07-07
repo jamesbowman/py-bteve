@@ -17,7 +17,7 @@ def crc(s):     # CRC-32 of string s
 random.seed(7)
 rr = random.randrange
 
-__VERSION__ = "0.1.0"
+__VERSION__ = "1.0.0"
 
 def gentext(s):
     fn = "../../.fonts/IBMPlexSans-SemiBold.otf"
