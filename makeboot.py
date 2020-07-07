@@ -211,6 +211,7 @@ def make_bringup():
             gd.Vertex2f(x + 220, y + 5)
         tests = ["flash U2",
                  "flash U4",
+                 "U4 quad",
                  "EVE audio",
                  "EVE quad"]
         [part(i, n) for (i, n) in enumerate(tests)]
