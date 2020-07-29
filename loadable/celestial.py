@@ -72,7 +72,7 @@ class Renderer:
         Mloc = 0
         if gd.rd32(Mloc) != self.version:
             ld = common.Loader(gd)
-            ld.add(struct.pack("I", self.version))
+            ld.add(struct.pack("4I", self.version, 0, 0, 0))
             gd.BitmapHandle(0)
             ld.Lastc("assets/celestial-day.astc")
             gd.BitmapHandle(1)
@@ -85,9 +85,9 @@ class Renderer:
         y0 = 720 - 640
 
         t = time.time() # + 180 * 24 * 3600
-        t = time.time() + 3600 * 12
+        t = time.time() + self.t * 600
         (sun_lat, sun_lon) = subsolar_point(t)
-        print(sun_lat, sun_lon)
+        print(self.t, sun_lat, sun_lon)
         x = 640 + 640 * sun_lon / 180
         y = y0 + 320 - 320 * sun_lat / 90
 
@@ -127,7 +127,6 @@ class Renderer:
 
         gd.SaveContext()
         gd.BlendFunc(gd3.DST_ALPHA, gd3.ONE_MINUS_DST_ALPHA)
-        gd.BlendFunc(0, 1)
         gd.BitmapHandle(0)
         gd.Vertex2f(0, y0)
         gd.RestoreContext()
@@ -156,5 +155,6 @@ class Renderer:
                              hr, dt.minute, 0, 0)
 
         self.t += 1
-        gd.screenshot_im().save("out.png"); sys.exit(0);
+        # gd.screenshot_im().save("out.png"); sys.exit(0);
         # time.sleep(10)
+        assert self.t < 180
