@@ -17,7 +17,7 @@ def crc(s):     # CRC-32 of string s
 random.seed(7)
 rr = random.randrange
 
-__VERSION__ = "1.0.0"
+__VERSION__ = "1.0.3"
 
 def gentext(s):
     fn = "../../.fonts/IBMPlexSans-SemiBold.otf"
@@ -91,7 +91,7 @@ class Gameduino(_EVE, EVE):
             self.Clear()
             self.swap()
             setup = [
-                # (gd3.REG_OUTBITS, 0),
+                (gd3.REG_OUTBITS, 0),
                 (gd3.REG_DITHER, 0),
                 (gd3.REG_GPIO, 0x83),
                 (gd3.REG_CSPREAD, 0),
@@ -204,8 +204,8 @@ def make_bringup():
         gd.BitmapSize(gd3.NEAREST, gd3.REPEAT, gd3.REPEAT, 40, 40)
 
         def part(i, name):
-            x = 200 + 300 * (i // 2)
-            y = 500 + 70 * (i % 2)
+            x = 200 + 300 * (i // 3)
+            y = 470 + 60 * (i % 3)
             gd.cmd_text(x + 190, y, 31, gd3.OPT_RIGHTX, name + "")
             gd.Cell(i)
             gd.Vertex2f(x + 220, y + 5)
@@ -213,11 +213,24 @@ def make_bringup():
                  "flash U4",
                  "U4 quad",
                  "EVE audio",
-                 "EVE quad"]
+                 "EVE quad",
+                 "video bus",
+                 "i2c",
+                 "xx",
+                 "Loaded" ]
         [part(i, n) for (i, n) in enumerate(tests)]
         gd.cmd_memset(0, 0b01001001, len(tests)) # all gray initially
 
         gd.cmd_text(640, 690, 31, gd3.OPT_CENTER, __VERSION__)
+
+        if 0:
+            gd.Cell(0)
+            gd.cmd_setbitmap(0x1000, gd3.RGB565, 512, 400)
+            gd.Vertex2f(5, 5)
+
+        gd.ColorRGB(0xe0, 0xe0, 0xe0)
+        gd.cmd_text(10, 690, 29, gd3.OPT_CENTERY | gd3.OPT_FORMAT, "%s", 0xb0000)
+
         gd.swap()
 
     return gd.buf
@@ -279,6 +292,8 @@ def poweron():
     gd.Vertex2f(x, y)
 
     gd.cmd_text(640, 690, 31, gd3.OPT_CENTER, __VERSION__)
+    gd.ColorRGB(0xe0, 0xe0, 0xe0)
+    gd.cmd_text(10, 690, 29, gd3.OPT_CENTERY | gd3.OPT_FORMAT, "%s", 0xb0000)
 
     gd.swap()
     print('poweron is', len(gd.buf), 'bytes')
@@ -295,8 +310,7 @@ def make_textmode():
     (x0, y0, _, _) = im.getbbox()
     print(128 - x0, 128 - y0)
     im = im.crop(im.getbbox())
-    print(im)
-    im.save("out.png")
+    # im.save("out.png")
 
     (w, h) = im.size
 
@@ -304,7 +318,7 @@ def make_textmode():
     draw = ImageDraw.Draw(fim)
     for i,c in enumerate(ch):
         draw.text((128 - x0, (128 - y0) + (h * i)), c, font=font, fill=255)
-    fim.save("out.png")
+    # fim.save("out.png")
 
     gd = Gameduino()
 
@@ -331,6 +345,9 @@ def make_textmode():
     fm = cm + 2 * cz
     fb = fm + len(fim.tobytes())
 
+    gd.Clear()
+    gd.swap()
+
     gd.cmd_inflate(fm)
     c = align4(zlib.compress(fim.tobytes()))
     gd.cc(c)
@@ -346,9 +363,12 @@ def make_textmode():
     gd.BitmapHandle(1)
     gd.cmd_setbitmap(cm, gd3.RGB565, 1, H)
     size(w2, ht)
-    b = bytes([rr(256) for i in range(2 * 2 * W * H)])
-    gd.cmd_memwrite(cm, len(b))
-    gd.cc(align4(b))
+    if 0:
+        b = bytes([rr(256) for i in range(2 * 2 * W * H)])
+        gd.cmd_memwrite(cm, len(b))
+        gd.cc(align4(b))
+    else:
+        gd.cmd_memzero(cm, 2 * 2 * W * H)
 
     with open("_textmode.fs", "wt") as f:
         for v in ("fm", "fb", "cm", "sz"):
@@ -397,7 +417,6 @@ def make_textmode():
         drawtwice(-1)
         gd.RestoreContext()
 
-
     gd.cmd_memwrite(gd3.REG_MACRO_0, 4)
     gd.VertexTranslateY(vh << 4)
 
@@ -423,10 +442,11 @@ def make_textmode():
 
     gd.swap()
 
-    for i in range(H):
-        s = "[{0}]".format(i)
-        for j,c in enumerate(s):
-            drawch(i + j, i, c, 0xffff, 0x1010)
+    if 0:
+        for i in range(H):
+            s = "[{0}]".format(i)
+            for j,c in enumerate(s):
+                drawch(i + j, i, c, 0xffff, 0x1010)
 
     return gd.buf
 
@@ -465,33 +485,55 @@ def make_bootstream(streams):
         gd.swap()
 
         fl = open("dazzler.bit", "rb").read()[96:]
-        fl = fl.ljust(512 * 1024, b'\xff')
-        fl += struct.pack("H", 0x947a)
-        for s in streams:
-            fl += struct.pack("I", len(s)) + s
+        with open("_jtagboot.h", "wt") as f:
+            for i in range(0, len(fl), 100):
+                f.write("".join(["%d,"%b for b in fl[i:i + 100]]) + "\n")
+
+        if 1:
+            fl = fl.ljust(512 * 1024, b'\xff')
+            fl += struct.pack("H", 0x947a)
+            for s in streams:
+                fl += struct.pack("I", len(s)) + s
 
         print('dazzler bitstream', len(fl), len(zlib.compress(fl, 9)))
-        with open("_loadflash2.fs", "wt") as h:
-            gd = Gameduino()
-            gd.cmd_inflate(0)
-            gd.cc(align4(zlib.compress(fl)))
-            gd.cmd_memcrc(0, len(fl), 0)
-            print('Expected CRC %x' % crc(fl))
 
+        gd = Gameduino()
+        gd.cmd_inflate(0x1000)
+        gd.cc(align4(zlib.compress(fl)))
+        ecrc = crc(fl)
+
+        gd.cmd_memwrite(0xffff8, 8)
+        gd.c4(len(fl))
+        gd.c4(ecrc)
+        gd.cmd_memcrc(0x1000, len(fl), 0)
+        print('Expected CRC %x' % ecrc)
+
+        with open("_loadflash2.fs", "wt") as h:
             h.write("0 MUX0 CSPI stream : m >spid ; hex\n")
             db = array.array("I", gd.buf)
             l = []
             for x in db:
                 l += ["%x." % x, "m"]
-            l += ["result"]
+            l += ["result .x .x"]
             h.write(textwrap.fill(" ".join(l), 127) + "\n")
-            h.write("( expect %08X )\n" % crc(fl))
+            h.write("( expect %08X )\n" % ecrc)
 
             s = sum(fl[:]) & 0xffff
             print("Expected checksum %04x" % s)
             h.write("$%x. e2fl\n" % (len(fl)))
             h.write("$%x. fl.check \ expect %x\n" % (len(fl), s))
             h.write("decimal\n")
+
+        b = gd.buf
+        padw = (-len(b) & 0xff) // 4
+        b = (padw * struct.pack("I", 0xffffff5b)) + b
+
+        with open("_loadflash2.bin", "wb") as h:
+            h.write(b)
+
+        with open("_loadflash2.h", "wt") as f:
+            for i in range(0, len(b), 100):
+                f.write("".join(["%d,"%x for x in b[i:i + 100]]) + "\n")
 
         return
 
