@@ -470,7 +470,7 @@ def make_bootstream(streams):
         for s in streams:
             fl += struct.pack("I", len(s)) + s
 
-        print('dazzler bitstream', len(fl), len(zlib.compress(fl, 9)))
+        print('dazzler bitstream is %d bytes, compresses to %d bytes' % (len(fl), len(zlib.compress(fl, 9))))
         with open("_loadflash2.fs", "wt") as h:
             gd = Gameduino()
             gd.cmd_inflate(0)
