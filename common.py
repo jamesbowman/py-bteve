@@ -4,6 +4,8 @@ import math
 import random
 import struct
 
+from PIL import Image, ImageFont, ImageDraw, ImageChops
+
 from gameduino_spidriver import GameduinoSPIDriver
 import registers as gd3
 import gameduino2.prep
@@ -130,3 +132,33 @@ class Pt:
     def __repr__(self):
         return "<%r, %r>" % self.tuple()
 
+class TextElement:
+    def __init__(self, ld, ttfname, h, s):
+        self.eve = ld.gd
+        eve = self.eve
+        font = ImageFont.truetype(ttfname, h)
+        im = Image.new("L", (1280, 720))
+        dr = ImageDraw.Draw(im)
+        dr.text((100, 100), s, font = font, fill = 255)
+        self.im = im.crop(im.getbbox())
+        ld.L8(self.im)
+
+    def draw_center(self, y):
+        eve = self.eve
+        (w, h) = self.im.size
+        eve.Vertex2f(640 - w // 2, y - h // 2)
+
+class Branded:
+    def textload(self, ld, ttfname, scale = 1.0):
+        eve = self.eve
+        eve.BitmapHandle(1)
+        self.te_gameduino = TextElement(ld, ttfname, int(100 * scale), "GAMEDUINO 3X")
+        eve.BitmapHandle(2)
+        self.te_dazzler = TextElement(ld, ttfname, int(300 * scale), "dazzler")
+
+    def textdraw(self):
+        eve = self.eve
+        eve.BitmapHandle(1)
+        self.te_gameduino.draw_center(200)
+        eve.BitmapHandle(2)
+        self.te_dazzler.draw_center(450)
