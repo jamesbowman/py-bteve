@@ -35,7 +35,7 @@ class Gameduino(_EVE, EVE):
 
         t0 = time.time()
         while self.rd32(REG_ID) != 0x7c:
-            assert (time.time() - t0) < 2.0, "No response - is device attached?"
+            assert (time.time() - t0) < 2999999.0, "No response - is device attached?"
 
         self.getspace()
         print("ID %x  %x %x %x" % (
@@ -48,7 +48,7 @@ class Gameduino(_EVE, EVE):
 
     def coldstart(self):
         # self.host_cmd(0x61, 0x46)   # 72 MHz
-        self.host_cmd(0x48)         # int clock
+        self.host_cmd(0x44)         # int clock
         self.host_cmd(0x00)         # Wake up
         self.host_cmd(0x68)         # Core reset
 
@@ -85,16 +85,6 @@ class Gameduino(_EVE, EVE):
         print(self.w, self.h, self.rd32(REG_PCLK), hex(self.rd32(REG_GPIO)))
         self.cmd_regwrite(REG_GPIO, 0x83)
         time.sleep(.1)
-        return
-
-        self.cmd_regwrite(REG_PWM_HZ, 8947)
-        self.cmd_regwrite(REG_PWM_DUTY, 0)
-        self.cmd_regwrite(REG_GPIO, 0x83)
-        self.cmd_regwrite(REG_PWM_DUTY, 128)
-        for i in range(0):
-            self.cmd_regwrite(REG_PWM_DUTY, 16 * i)
-            self.Clear(1,1,1)
-            self.swap()
 
     def _addr(self, a):
         return struct.pack(">I", a)[1:]

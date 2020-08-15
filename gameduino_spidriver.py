@@ -5,7 +5,8 @@ from spidriver import SPIDriver
 class GameduinoSPIDriver(gameduino.Gameduino):
     def __init__(self):
         # self.d = SPIDriver("/dev/serial/by-id/usb-FTDI_FT230X_Basic_UART_DO01HE8Q-if00-port0")
-        self.d = SPIDriver("/dev/serial/by-id/usb-FTDI_FT230X_Basic_UART_DO02C71A-if00-port0")
+        # self.d = SPIDriver("/dev/serial/by-id/usb-FTDI_FT230X_Basic_UART_DO02C71A-if00-port0")
+        self.d = SPIDriver("/dev/serial/by-id/usb-FTDI_FT230X_Basic_UART_DO02C6GR-if00-port0")
 
         self.d.unsel()
         self.d.seta(1)
@@ -72,5 +73,3 @@ class GameduinoSPIDriver(gameduino.Gameduino):
         r = self.d.read(rd)
         self.d.unsel()
         return r
-
-

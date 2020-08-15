@@ -5,6 +5,7 @@ import random
 import struct
 
 from PIL import Image, ImageFont, ImageDraw, ImageChops
+import numpy as np
 
 from gameduino_spidriver import GameduinoSPIDriver
 import registers as gd3
@@ -162,3 +163,17 @@ class Branded:
         self.te_gameduino.draw_center(200)
         eve.BitmapHandle(2)
         self.te_dazzler.draw_center(450)
+
+def norm(v):
+    return v / np.amax(v)
+
+def glow(r):
+    w = 2 * r
+    x = np.tile(np.linspace(-1, 1, w), w)
+    y = np.repeat(np.linspace(-1, 1, w), w)
+    c = np.sqrt(.10)
+    gauss_x = np.exp(-(x*x) / (2 * c ** 2))
+    gauss_y = np.exp(-(y*y) / (2 * c ** 2))
+    t = norm(gauss_x * gauss_y)
+    ti = (255 * t).astype(np.uint8).reshape(w, w)
+    return Image.fromarray(ti, "L")

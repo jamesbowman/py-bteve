@@ -20,7 +20,7 @@ class EVE:
     def fstring(self, aa):
         self.cstring(aa[0])
         # XXX MicroPython is currently lacking array.array.tobytes()
-        # self.cc(array.array("i", aa[1:]).tobytes())
+        self.cc(array.array("i", aa[1:]).tobytes())
 
     def cmd_append(self, *args):
         self.cmd(0x1e, "II", args)
