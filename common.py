@@ -3,15 +3,16 @@ import zlib
 import math
 import random
 import struct
+import binascii
+def crc(s):     # CRC-32 of string s
+    return binascii.crc32(s) & 0xffffffff
 
 from PIL import Image, ImageFont, ImageDraw, ImageChops
 import numpy as np
 
-from gameduino_spidriver import GameduinoSPIDriver
-import registers as gd3
+import bteve as eve
 import gameduino2.prep
 import gameduino2.convert
-from eve import align4, EVE
 
 def lerp(t, a, b):
     return a + (b - a) * t
@@ -22,7 +23,7 @@ def map(x, x0, x1, y0 = 0, y1 = 1):
     t = max(0, min(t, 1))
     return lerp(t, y0, y1)
 
-class LoggingGameduinoSPIDriver(GameduinoSPIDriver):
+class LoggingGameduinoSPIDriver(eve.GameduinoSPIDriver):
     
     def __init__(self):
         GameduinoSPIDriver.__init__(self)
@@ -55,39 +56,44 @@ class Loader:
         self.a = a
 
     def add(self, d):
-        self.gd.cmd_inflate(self.a)
-        self.gd.cc(align4(zlib.compress(d)))
+        gd = self.gd
+        gd.cmd_memcrc(self.a, len(d), 0)
+        if crc(d) == gd.result():
+            print('skipping loading', len(d), 'bytes')
+        else:
+            self.gd.cmd_inflate(self.a)
+            self.gd.cc(eve.align4(zlib.compress(d)))
         self.a += len(d)
         
     def L8(self, im):
         (w, h) = im.size
-        self.gd.cmd_setbitmap(self.a, gd3.L8, w, h)
+        self.gd.cmd_setbitmap(self.a, eve.L8, w, h)
         self.add(im.tobytes())
 
     def ARGB4(self, im):
         (w, h) = im.size
-        self.gd.cmd_setbitmap(self.a, gd3.ARGB4, w, h)
-        (_, d) = gameduino2.convert.convert(im, False, gd3.ARGB4)
+        self.gd.cmd_setbitmap(self.a, eve.ARGB4, w, h)
+        (_, d) = gameduino2.convert.convert(im, False, eve.ARGB4)
         self.add(d)
 
     def RGB565(self, im):
         (w, h) = im.size
-        self.gd.cmd_setbitmap(self.a, gd3.RGB565, w, h)
-        (_, d) = gameduino2.convert.convert(im, False, gd3.RGB565)
+        self.gd.cmd_setbitmap(self.a, eve.RGB565, w, h)
+        (_, d) = gameduino2.convert.convert(im, False, eve.RGB565)
         self.add(d)
 
     def ARGB4s(self, ims):
         im = ims[0]
         (w, h) = im.size
-        self.gd.cmd_setbitmap(self.a, gd3.ARGB4, w, h)
+        self.gd.cmd_setbitmap(self.a, eve.ARGB4, w, h)
         for im in ims:
-            (_, d) = gameduino2.convert.convert(im, False, gd3.ARGB4)
+            (_, d) = gameduino2.convert.convert(im, False, eve.ARGB4)
             self.add(d)
 
     def L4(self, im):
         (w, h) = im.size
-        self.gd.cmd_setbitmap(self.a, gd3.L4, w, h)
-        (_, d) = gameduino2.convert.convert(im.convert("L"), False, gd3.L4)
+        self.gd.cmd_setbitmap(self.a, eve.L4, w, h)
+        (_, d) = gameduino2.convert.convert(im.convert("L"), False, eve.L4)
         self.add(d)
 
     def Lastc(self, filename):
@@ -98,10 +104,8 @@ class Loader:
             print(w, h, iw, ih)
             (bw, bh) = ((iw + (w - 1)) // w, (ih + (h - 1)) // h)
             d = gameduino2.prep.tile2(f.read(), bw, bh)
-            gd.cmd_inflate(self.a)
-            gd.cc(align4(zlib.compress(d)))
-            gd.cmd_setbitmap(self.a, eval("gd3.ASTC_%dx%d" % (w, h)), iw, ih)
-            self.a += len(d)
+            gd.cmd_setbitmap(self.a, eval("eve.ASTC_%dx%d" % (w, h)), iw, ih)
+            self.add(d)
 
 class Pt:
     def __init__(self, x = None, y = None):
@@ -151,17 +155,17 @@ class TextElement:
 
 class Branded:
     def textload(self, ld, ttfname, scale = 1.0):
-        eve = self.eve
-        eve.BitmapHandle(1)
+        gd = self.gd
+        gd.BitmapHandle(1)
         self.te_gameduino = TextElement(ld, ttfname, int(100 * scale), "GAMEDUINO 3X")
-        eve.BitmapHandle(2)
+        gd.BitmapHandle(2)
         self.te_dazzler = TextElement(ld, ttfname, int(300 * scale), "dazzler")
 
     def textdraw(self):
-        eve = self.eve
-        eve.BitmapHandle(1)
+        gd = self.gd
+        gd.BitmapHandle(1)
         self.te_gameduino.draw_center(200)
-        eve.BitmapHandle(2)
+        gd.BitmapHandle(2)
         self.te_dazzler.draw_center(450)
 
 def norm(v):
