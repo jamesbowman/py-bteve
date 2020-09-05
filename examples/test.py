@@ -16,5 +16,5 @@ coverage.cov0(f)
 f.flush()
 actual = crc32(b"".join(f.d))
 expected = 0xefc20a86
+print('actual', hex(actual), 'expected', hex(expected))
 assert actual == expected
-
