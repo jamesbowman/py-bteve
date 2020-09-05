@@ -1,0 +1,3 @@
+set -e
+pip install -U .
+python examples/test.py
