@@ -1,9 +1,9 @@
 import sys
 import time
 import struct
-from _eve import _EVE
-from eve import EVE
-from registers import *
+from ._eve import _EVE
+from .eve import EVE
+from .registers import *
 
 if sys.implementation.name != "circuitpython":
     def const(x): return x

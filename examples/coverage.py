@@ -157,6 +157,4 @@ def cov0(eve):
     for l in (0, 1, 2, 3, 4, 8, 9, 10, 11, 12, 785):
         rd = MockFile(l)
         eve.load(rd)
-    """
-    f.load(open("circuitpython.png", "rb"))
-    """
+    # eve.load(open("assets/blinka100.png", "rb"))
