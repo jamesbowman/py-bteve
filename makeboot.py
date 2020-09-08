@@ -2,9 +2,8 @@ import textwrap
 import struct
 import array
 from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageChops
-from _eve import _EVE
-from eve import EVE, align4
-import registers as gd3
+from bteve import registers as gd3
+import bteve as eve
 import zlib
 from io import BytesIO
 from itertools import groupby
@@ -38,7 +37,7 @@ def preview(cmdbuf):
     gd.cc(cmdbuf)
     gd.finish()
     
-class Gameduino(_EVE, EVE):
+class Gameduino(eve.Gameduino):
     def __init__(self):
         self.buf = b''
 
@@ -171,7 +170,7 @@ def make_flash():
     blob_addr = 0x8000
     gd.cmd_inflate(blob_addr)
     img = open("unified.blob", "rb").read()
-    c = align4(zlib.compress(img, 9))
+    c = eve.align4(zlib.compress(img, 9))
     gd.cc(c)
     gd.cmd_flashupdate(0, blob_addr, 0x1000)
     gd.cmd_flashfast()
@@ -242,7 +241,7 @@ def poweron():
     gd.BitmapHandle(0)
     gd.cmd_loadimage(0, 0)
     (w, h) = Image.open("gameduino.png").size
-    gd.cc(align4(open("gameduino.png", "rb").read()))
+    gd.cc(eve.align4(open("gameduino.png", "rb").read()))
     gd.BitmapSize(gd3.NEAREST, gd3.BORDER, gd3.BORDER, 0, 0)
 
     H = 0x60
@@ -255,7 +254,7 @@ def poweron():
     grid.save(buf, "PNG")
     gd.BitmapHandle(1)
     gd.cmd_loadimage(-1, 0)
-    gd.cc(align4(buf.getvalue()))
+    gd.cc(eve.align4(buf.getvalue()))
     gd.BitmapSize(gd3.BILINEAR, gd3.REPEAT, gd3.REPEAT, 0, 0)
 
     daz = gentext("dazzler")
@@ -263,7 +262,7 @@ def poweron():
     daz.save(buf, "PNG")
     gd.BitmapHandle(2)
     gd.cmd_loadimage(-1, 0)
-    gd.cc(align4(buf.getvalue()))
+    gd.cc(eve.align4(buf.getvalue()))
 
     gd.ClearColorRGB(0x20, 0x00, 0x00)
     gd.Clear()
@@ -349,7 +348,7 @@ def make_textmode():
     gd.swap()
 
     gd.cmd_inflate(fm)
-    c = align4(zlib.compress(fim.tobytes()))
+    c = eve.align4(zlib.compress(fim.tobytes()))
     gd.cc(c)
 
     print('font size', (w, h), (w2, h2), 'screen size', (W, H - 1))
@@ -366,7 +365,7 @@ def make_textmode():
     if 0:
         b = bytes([rr(256) for i in range(2 * 2 * W * H)])
         gd.cmd_memwrite(cm, len(b))
-        gd.cc(align4(b))
+        gd.cc(eve.align4(b))
     else:
         gd.cmd_memzero(cm, 2 * 2 * W * H)
 
@@ -457,7 +456,7 @@ def make_bootstream(streams):
     if 0:
         gd.cmd_loadimage(0, 0)
         (w, h) = Image.open("gameduino.png").size
-        gd.cc(align4(open("gameduino.png", "rb").read()))
+        gd.cc(eve.align4(open("gameduino.png", "rb").read()))
         gd.ClearColorRGB(0x20, 0x00, 0x00)
         gd.Clear()
         gd.Begin(gd3.BITMAPS)
@@ -499,13 +498,13 @@ def make_bootstream(streams):
         with open("_loadflash2.fs", "wt") as h:
             gd = Gameduino()
             gd.cmd_inflate(0)
-            gd.cc(align4(zlib.compress(fl)))
+            gd.cc(eve.align4(zlib.compress(fl)))
             gd.cmd_memcrc(0, len(fl), 0)
             print('Expected CRC %x' % crc(fl))
 
         gd = Gameduino()
         gd.cmd_inflate(0x1000)
-        gd.cc(align4(zlib.compress(fl)))
+        gd.cc(eve.align4(zlib.compress(fl)))
         ecrc = crc(fl)
 
         gd.cmd_memwrite(0xffff8, 8)
@@ -613,7 +612,7 @@ def make_sector_1():
     gd.setup_1280x720()
     gd.pack()
     print("Sector 1 CRC %08X" % crc(gd.buf))
-    cd = align4(zlib.compress(gd.buf, 9))
+    cd = eve.align4(zlib.compress(gd.buf, 9))
     with open("_sector1.h", "wt") as f:
         f.write(",".join([str(s) for s in cd]))
         f.write("\n")

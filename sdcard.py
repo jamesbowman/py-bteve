@@ -123,7 +123,7 @@ class FAT:
         print(hexdump(sec0))
 
 if __name__ == "__main__":
-    s = spidriver.SPIDriver("/dev/serial/by-id/usb-FTDI_FT230X_Basic_UART_DO02C71A-if00-port0")
+    s = spidriver.SPIDriver("/dev/serial/by-id/usb-FTDI_FT230X_Basic_UART_DO02C6GR-if00-port0")
     s.unsel()
     s.seta(1)
     s.setb(1)
