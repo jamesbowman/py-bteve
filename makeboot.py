@@ -2,7 +2,6 @@ import textwrap
 import struct
 import array
 from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageChops
-from bteve import registers as gd3
 import bteve as eve
 import zlib
 from io import BytesIO
@@ -62,40 +61,40 @@ class Gameduino(eve.Gameduino):
         assert((h_Active + h_Front + h_Sync + h_Back) == h_Total)
         assert((v_Active + v_Front + v_Sync + v_Back) == v_Total)
 
-        # self.cmd_regwrite(gd3.REG_ADAPTIVE_FRAMERATE, 0)
+        # self.cmd_regwrite(eve.REG_ADAPTIVE_FRAMERATE, 0)
 
-        self.cmd_regwrite(gd3.REG_HCYCLE, h_Total)
-        self.cmd_regwrite(gd3.REG_HOFFSET, h_Sync + h_Back)
-        self.cmd_regwrite(gd3.REG_HSIZE, h_Active)
+        self.cmd_regwrite(eve.REG_HCYCLE, h_Total)
+        self.cmd_regwrite(eve.REG_HOFFSET, h_Sync + h_Back)
+        self.cmd_regwrite(eve.REG_HSIZE, h_Active)
 
-        self.cmd_regwrite(gd3.REG_VCYCLE, v_Total)
-        self.cmd_regwrite(gd3.REG_VOFFSET, v_Sync + v_Back)
-        self.cmd_regwrite(gd3.REG_VSIZE, v_Active)
+        self.cmd_regwrite(eve.REG_VCYCLE, v_Total)
+        self.cmd_regwrite(eve.REG_VOFFSET, v_Sync + v_Back)
+        self.cmd_regwrite(eve.REG_VSIZE, v_Active)
 
         # See CEA-861 p.21
-        self.cmd_regwrite(gd3.REG_HSYNC1, 0)
-        self.cmd_regwrite(gd3.REG_HSYNC0, h_Sync)
+        self.cmd_regwrite(eve.REG_HSYNC1, 0)
+        self.cmd_regwrite(eve.REG_HSYNC0, h_Sync)
 
-        self.cmd_regwrite(gd3.REG_VSYNC1, 0)
-        self.cmd_regwrite(gd3.REG_VSYNC0, v_Sync)
+        self.cmd_regwrite(eve.REG_VSYNC1, 0)
+        self.cmd_regwrite(eve.REG_VSYNC0, v_Sync)
 
         if 0:
-            self.cmd_regwrite(gd3.REG_TRIM, 23)
+            self.cmd_regwrite(eve.REG_TRIM, 23)
             self.cmd_regwrite(0x302614, 0x8c1)
 
-        self.cmd_regwrite(gd3.REG_PCLK, 1)
+        self.cmd_regwrite(eve.REG_PCLK, 1)
     def setup_1280x720(self):
         if 1:
 
             self.Clear()
             self.swap()
             setup = [
-                (gd3.REG_OUTBITS, 0),
-                (gd3.REG_DITHER, 0),
-                (gd3.REG_GPIO, 0x83),
-                (gd3.REG_CSPREAD, 0),
-                (gd3.REG_PCLK_POL, 0),
-                (gd3.REG_ADAPTIVE_FRAMERATE, 0),
+                (eve.REG_OUTBITS, 0),
+                (eve.REG_DITHER, 0),
+                (eve.REG_GPIO, 0x83),
+                (eve.REG_CSPREAD, 0),
+                (eve.REG_PCLK_POL, 0),
+                (eve.REG_ADAPTIVE_FRAMERATE, 0),
             ]
             for (a, v) in setup:
                 self.cmd_regwrite(a, v)
@@ -121,35 +120,35 @@ class Gameduino(eve.Gameduino):
             self.Clear()
             self.swap()
             setup = [
-                # (gd3.REG_OUTBITS, 0),
-                (gd3.REG_DITHER, 0),
-                (gd3.REG_GPIO, 0x83),
-                (gd3.REG_CSPREAD, 0),
-                (gd3.REG_PCLK_POL, 0),
-                (gd3.REG_ADAPTIVE_FRAMERATE, 0),
+                # (eve.REG_OUTBITS, 0),
+                (eve.REG_DITHER, 0),
+                (eve.REG_GPIO, 0x83),
+                (eve.REG_CSPREAD, 0),
+                (eve.REG_PCLK_POL, 0),
+                (eve.REG_ADAPTIVE_FRAMERATE, 0),
 
-                (gd3.REG_HCYCLE, 800),
-                (gd3.REG_HOFFSET, 16 + 96),
-                (gd3.REG_HSIZE, 640),
+                (eve.REG_HCYCLE, 800),
+                (eve.REG_HOFFSET, 16 + 96),
+                (eve.REG_HSIZE, 640),
 
-                (gd3.REG_HSYNC1, 0),
-                (gd3.REG_HSYNC0, 96),
+                (eve.REG_HSYNC1, 0),
+                (eve.REG_HSYNC0, 96),
 
-                (gd3.REG_VCYCLE, 525),
-                (gd3.REG_VOFFSET, 12),
-                (gd3.REG_VSIZE, 480),
+                (eve.REG_VCYCLE, 525),
+                (eve.REG_VOFFSET, 12),
+                (eve.REG_VSIZE, 480),
 
-                (gd3.REG_VSYNC1, 0),
-                (gd3.REG_VSYNC0, 10),
+                (eve.REG_VSYNC1, 0),
+                (eve.REG_VSYNC0, 10),
             ]
             for (a, v) in setup:
                 self.cmd_regwrite(a, v)
 
         if 0:
-            self.cmd_regwrite(gd3.REG_TRIM, 23)
+            self.cmd_regwrite(eve.REG_TRIM, 23)
             self.cmd_regwrite(0x302614, 0x8c1)
 
-        self.cmd_regwrite(gd3.REG_PCLK, 3)
+        self.cmd_regwrite(eve.REG_PCLK, 3)
         self.w = 640
         self.h = 480
 
@@ -199,13 +198,13 @@ def make_bringup():
             y += Y
         gd.RestoreContext()
 
-        gd.cmd_setbitmap(0, gd3.RGB332, 1, 1)
-        gd.BitmapSize(gd3.NEAREST, gd3.REPEAT, gd3.REPEAT, 40, 40)
+        gd.cmd_setbitmap(0, eve.RGB332, 1, 1)
+        gd.BitmapSize(eve.NEAREST, eve.REPEAT, eve.REPEAT, 40, 40)
 
         def part(i, name):
             x = 200 + 300 * (i // 3)
             y = 470 + 60 * (i % 3)
-            gd.cmd_text(x + 190, y, 31, gd3.OPT_RIGHTX, name + "")
+            gd.cmd_text(x + 190, y, 31, eve.OPT_RIGHTX, name + "")
             gd.Cell(i)
             gd.Vertex2f(x + 220, y + 5)
         tests = ["flash U2",
@@ -220,15 +219,15 @@ def make_bringup():
         [part(i, n) for (i, n) in enumerate(tests)]
         gd.cmd_memset(0, 0b01001001, len(tests)) # all gray initially
 
-        gd.cmd_text(640, 690, 31, gd3.OPT_CENTER, __VERSION__)
+        gd.cmd_text(640, 690, 31, eve.OPT_CENTER, __VERSION__)
 
         if 0:
             gd.Cell(0)
-            gd.cmd_setbitmap(0x1000, gd3.RGB565, 512, 400)
+            gd.cmd_setbitmap(0x1000, eve.RGB565, 512, 400)
             gd.Vertex2f(5, 5)
 
         gd.ColorRGB(0xe0, 0xe0, 0xe0)
-        gd.cmd_text(10, 690, 29, gd3.OPT_CENTERY | gd3.OPT_FORMAT, "%s", 0xb0000)
+        gd.cmd_text(10, 690, 29, eve.OPT_CENTERY | eve.OPT_FORMAT, "%s", 0xb0000)
 
         gd.swap()
 
@@ -242,7 +241,7 @@ def poweron():
     gd.cmd_loadimage(0, 0)
     (w, h) = Image.open("gameduino.png").size
     gd.cc(eve.align4(open("gameduino.png", "rb").read()))
-    gd.BitmapSize(gd3.NEAREST, gd3.BORDER, gd3.BORDER, 0, 0)
+    gd.BitmapSize(eve.NEAREST, eve.BORDER, eve.BORDER, 0, 0)
 
     H = 0x60
     grid = Image.frombytes("L", (4, 4), bytes([
@@ -255,7 +254,7 @@ def poweron():
     gd.BitmapHandle(1)
     gd.cmd_loadimage(-1, 0)
     gd.cc(eve.align4(buf.getvalue()))
-    gd.BitmapSize(gd3.BILINEAR, gd3.REPEAT, gd3.REPEAT, 0, 0)
+    gd.BitmapSize(eve.BILINEAR, eve.REPEAT, eve.REPEAT, 0, 0)
 
     daz = gentext("dazzler")
     buf = BytesIO()
@@ -266,7 +265,7 @@ def poweron():
 
     gd.ClearColorRGB(0x20, 0x00, 0x00)
     gd.Clear()
-    gd.Begin(gd3.BITMAPS)
+    gd.Begin(eve.BITMAPS)
 
     gd.SaveContext()
     gd.cmd_scale(3, 3)
@@ -290,9 +289,9 @@ def poweron():
     (x, y) = ((1280 - daz.size[0]) / 2, 380)
     gd.Vertex2f(x, y)
 
-    gd.cmd_text(640, 690, 31, gd3.OPT_CENTER, __VERSION__)
+    gd.cmd_text(640, 690, 31, eve.OPT_CENTER, __VERSION__)
     gd.ColorRGB(0xe0, 0xe0, 0xe0)
-    gd.cmd_text(10, 690, 29, gd3.OPT_CENTERY | gd3.OPT_FORMAT, "%s", 0xb0000)
+    gd.cmd_text(10, 690, 29, eve.OPT_CENTERY | eve.OPT_FORMAT, "%s", 0xb0000)
 
     gd.swap()
     print('poweron is', len(gd.buf), 'bytes')
@@ -322,7 +321,7 @@ def make_textmode():
     gd = Gameduino()
 
     def size(a, b):
-        gd.BitmapSize(gd3.NEAREST, gd3.BORDER, gd3.BORDER, a, b)
+        gd.BitmapSize(eve.NEAREST, eve.BORDER, eve.BORDER, a, b)
         gd.BitmapSizeH(a >> 9, b >> 9)
 
     (sw, sh) = (720, 1280)
@@ -356,11 +355,11 @@ def make_textmode():
     print('bars:', (x_bar, y_bar))
 
     gd.BitmapHandle(0)
-    gd.cmd_setbitmap(fb, gd3.L8, w, ht)
+    gd.cmd_setbitmap(fb, eve.L8, w, ht)
     gd.cmd_memset(fb, 0x00, W * w * ht)
 
     gd.BitmapHandle(1)
-    gd.cmd_setbitmap(cm, gd3.RGB565, 1, H)
+    gd.cmd_setbitmap(cm, eve.RGB565, 1, H)
     size(w2, ht)
     if 0:
         b = bytes([rr(256) for i in range(2 * 2 * W * H)])
@@ -416,7 +415,7 @@ def make_textmode():
         drawtwice(-1)
         gd.RestoreContext()
 
-    gd.cmd_memwrite(gd3.REG_MACRO_0, 4)
+    gd.cmd_memwrite(eve.REG_MACRO_0, 4)
     gd.VertexTranslateY(vh << 4)
 
     gd.VertexFormat(0)
@@ -425,7 +424,7 @@ def make_textmode():
     gd.Clear()
     gd.ScissorXY(x_bar, y_bar)
     gd.ScissorSize((W * w2), (H - 1) * h2)
-    gd.Begin(gd3.BITMAPS)
+    gd.Begin(eve.BITMAPS)
 
     gd.ColorMask(1, 1, 1, 0)
     color_panel(1)
@@ -436,7 +435,7 @@ def make_textmode():
     drawtwice(0)
 
     gd.ColorMask(1, 1, 1, 0)
-    gd.BlendFunc(gd3.DST_ALPHA, gd3.ONE_MINUS_DST_ALPHA)
+    gd.BlendFunc(eve.DST_ALPHA, eve.ONE_MINUS_DST_ALPHA)
     color_panel(0)
 
     gd.swap()
@@ -459,7 +458,7 @@ def make_bootstream(streams):
         gd.cc(eve.align4(open("gameduino.png", "rb").read()))
         gd.ClearColorRGB(0x20, 0x00, 0x00)
         gd.Clear()
-        gd.Begin(gd3.BITMAPS)
+        gd.Begin(eve.BITMAPS)
         gd.Vertex2ii((1280 - w) // 2, (720 - h) // 2)
         gd.swap()
 
