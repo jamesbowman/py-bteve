@@ -15,7 +15,7 @@ def crc(s):     # CRC-32 of string s
 random.seed(7)
 rr = random.randrange
 
-__VERSION__ = "1.0.3"
+__VERSION__ = "1.0.4"
 
 def gentext(s):
     fn = "../../.fonts/IBMPlexSans-SemiBold.otf"
@@ -214,7 +214,7 @@ def make_bringup():
                  "EVE quad",
                  "video bus",
                  "i2c",
-                 "xx",
+                 "clock",
                  "Loaded" ]
         [part(i, n) for (i, n) in enumerate(tests)]
         gd.cmd_memset(0, 0b01001001, len(tests)) # all gray initially
@@ -228,6 +228,7 @@ def make_bringup():
 
         gd.ColorRGB(0xe0, 0xe0, 0xe0)
         gd.cmd_text(10, 690, 29, eve.OPT_CENTERY | eve.OPT_FORMAT, "%s", 0xb0000)
+        gd.cmd_text(1270, 690, 29, eve.OPT_RIGHTX | eve.OPT_CENTERY | eve.OPT_FORMAT, "%s", 0xb0100)
 
         gd.swap()
 
@@ -292,6 +293,7 @@ def poweron():
     gd.cmd_text(640, 690, 31, eve.OPT_CENTER, __VERSION__)
     gd.ColorRGB(0xe0, 0xe0, 0xe0)
     gd.cmd_text(10, 690, 29, eve.OPT_CENTERY | eve.OPT_FORMAT, "%s", 0xb0000)
+    gd.cmd_text(1270, 690, 29, eve.OPT_RIGHTX | eve.OPT_CENTERY | eve.OPT_FORMAT, "%s", 0xb0100)
 
     gd.swap()
     print('poweron is', len(gd.buf), 'bytes')
