@@ -55,8 +55,15 @@ class Loader:
         self.gd = gd
         self.a = a
 
+    def uadd(self, d):
+        self.a = (self.a + 1) & ~1
+        self.gd.cmd_inflate(self.a)
+        self.gd.cc(eve.align4(zlib.compress(d)))
+        self.a += len(d)
+
     def add(self, d):
         gd = self.gd
+        self.a = (self.a + 1) & ~1
         gd.cmd_memcrc(self.a, len(d), 0)
         if crc(d) == gd.result():
             print('skipping loading', len(d), 'bytes')

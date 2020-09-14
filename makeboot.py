@@ -11,6 +11,7 @@ import random
 import binascii
 def crc(s):     # CRC-32 of string s
     return binascii.crc32(s) & 0xffffffff
+import common
 
 random.seed(7)
 rr = random.randrange
@@ -238,31 +239,36 @@ def poweron():
     gd = Gameduino()
     gd.setup_1280x720()
 
-    gd.BitmapHandle(0)
-    gd.cmd_loadimage(0, 0)
-    (w, h) = Image.open("gameduino.png").size
-    gd.cc(eve.align4(open("gameduino.png", "rb").read()))
-    gd.BitmapSize(eve.NEAREST, eve.BORDER, eve.BORDER, 0, 0)
+    # Make sure $c0000 is 0x15
+    gd.cmd_memwrite(0xc0000, 1)
+    gd.cc(b'\x15' * 4)
 
+    ld = common.Loader(gd)
+    ld.add = ld.uadd
+
+    # Handle 0: gameduino logo
+    gd.BitmapHandle(0)
+    im = Image.open("gameduino.png").convert("RGB")
+    ld.RGB565(im)
+    (w, h) = im.size
+    gd.BitmapSize(eve.NEAREST, eve.BORDER, eve.BORDER, 0, 3 * h)
+
+    # Handle 1: grid
     H = 0x60
     grid = Image.frombytes("L", (4, 4), bytes([
         H, H, H, H,
         H, 0, 0, 0,
         H, 0, 0, 0,
         H, 0, 0, 0]))
-    buf = BytesIO()
-    grid.save(buf, "PNG")
     gd.BitmapHandle(1)
-    gd.cmd_loadimage(-1, 0)
-    gd.cc(eve.align4(buf.getvalue()))
-    gd.BitmapSize(eve.BILINEAR, eve.REPEAT, eve.REPEAT, 0, 0)
+    ld.L8(grid)
+    gd.BitmapSize(eve.BILINEAR, eve.REPEAT, eve.REPEAT, 0, 3 * h)
 
+    # Handle 2: dazzler glowing text
     daz = gentext("dazzler")
-    buf = BytesIO()
-    daz.save(buf, "PNG")
     gd.BitmapHandle(2)
-    gd.cmd_loadimage(-1, 0)
-    gd.cc(eve.align4(buf.getvalue()))
+    ld.L8(daz)
+
 
     gd.ClearColorRGB(0x20, 0x00, 0x00)
     gd.Clear()
@@ -450,6 +456,45 @@ def make_textmode():
 
     return gd.buf
 
+def make_loadflash(fn, fl):
+    print('%s: bitstream is %d bytes, compresses to %d bytes' % (fn, len(fl), len(zlib.compress(fl, 9))))
+    assert len(fl) % 256 == 0, len(fl)
+    LP = 0x1000 # load point
+    gd = Gameduino()
+    gd.cmd_inflate(LP)
+    gd.cc(eve.align4(zlib.compress(fl)))
+    gd.cmd_memcrc(0, len(fl), 0)
+    ecrc = crc(fl)
+
+    gd.cmd_memwrite(0xffff8, 8)
+    gd.c4(len(fl))
+    gd.c4(ecrc)
+    gd.cmd_memcrc(LP, len(fl), 0)
+    print('Expected CRC %x' % crc(fl))
+
+    b = gd.buf
+    padw = (-len(b) & 0xff) // 4
+    b = (padw * struct.pack("I", 0xffffff5b)) + b
+    with open(fn, "wb") as h:
+        h.write(b)
+    return
+
+    with open(fn, "wt") as h:
+        h.write("0 MUX0 CSPI stream : m >spid ; hex\n")
+        db = array.array("I", gd.buf)
+        l = []
+        for x in db:
+            l += ["%x." % x, "m"]
+        l += ["result .x .x"]
+        h.write(textwrap.fill(" ".join(l), 127) + "\n")
+        h.write("( expect %08X )\n" % ecrc)
+
+        s = sum(fl[:]) & 0xffff
+        print("Expected checksum %04x" % s)
+        h.write("$%x. e2fl\n" % (len(fl)))
+        h.write("$%x. fl.check \ expect %x\n" % (len(fl), s))
+        h.write("decimal\n")
+
 def make_bootstream(streams):
     gd = Gameduino()
     gd.setup_1280x720()
@@ -485,23 +530,38 @@ def make_bootstream(streams):
         gd.swap()
 
         fl = open("dazzler.bit", "rb").read()[96:]
+
+        desync = bytes([int(w, 16) for w in "30 a1 00 0d".split()])
+        p = fl.index(desync)
+        set_general5 = bytes([int(w, 16) for w in "32 e1 12 34".split()])
+        fl = fl[:p] + set_general5 + fl[p:]
+
         with open("_jtagboot.h", "wt") as f:
             for i in range(0, len(fl), 100):
                 f.write("".join(["%d,"%b for b in fl[i:i + 100]]) + "\n")
+
+        fl = fl.ljust(0x54000, b'\xff')
+        make_loadflash("_loadflash_min.bin", fl)
+
+        def autoexec(cmd):
+            return (fl + cmd).ljust(0x54100, b'\xff')
+        make_loadflash("_loadflash_dev.bin", autoexec(b'." DEV BUILD AUTOEXEC "'))
+
+        def cust():
+            f = autoexec(b'poweron')
+            f = f.ljust(512 * 1024, b'\xff')
+            f += struct.pack("H", 0x947a)
+            for s in streams:
+                f += struct.pack("I", len(s)) + s
+            f += b'\xff' * (-len(f) & 0xff)
+            return f
+        make_loadflash("_loadflash_cust.bin", cust())
 
         if 1:
             fl = fl.ljust(512 * 1024, b'\xff')
             fl += struct.pack("H", 0x947a)
             for s in streams:
                 fl += struct.pack("I", len(s)) + s
-
-        print('dazzler bitstream is %d bytes, compresses to %d bytes' % (len(fl), len(zlib.compress(fl, 9))))
-        with open("_loadflash2.fs", "wt") as h:
-            gd = Gameduino()
-            gd.cmd_inflate(0)
-            gd.cc(eve.align4(zlib.compress(fl)))
-            gd.cmd_memcrc(0, len(fl), 0)
-            print('Expected CRC %x' % crc(fl))
 
         gd = Gameduino()
         gd.cmd_inflate(0x1000)
