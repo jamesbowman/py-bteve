@@ -38,8 +38,9 @@ class Gameduino(_EVE, EVE):
             assert (time.time() - t0) < 1.0, "No response - is device attached?"
 
         self.getspace()
-        print("ID %x  %x %x %x" % (
+        print("ID %x  %x %x %x %x" % (
             self.rd32(REG_ID),
+            self.rd32(0xc0000),
             self.rd32(REG_HSIZE),
             self.rd32(REG_VSIZE),
             self.rd32(REG_CMDB_SPACE)))
@@ -48,7 +49,7 @@ class Gameduino(_EVE, EVE):
 
     def coldstart(self):
         # self.host_cmd(0x61, 0x46)   # 72 MHz
-        self.host_cmd(0x44)         # int clock
+        # self.host_cmd(0x44)         # int clock
         self.host_cmd(0x00)         # Wake up
         self.host_cmd(0x68)         # Core reset
 
