@@ -541,7 +541,8 @@ def make_bootstream(streams):
 
         gd.swap()
 
-        fl = open("dazzler.bit", "rb").read()[96:]
+        header = bytes([0xda,0x22,0x1e,0x55]) + b"Standard boot image\x00".ljust(32, b'\xff')
+        fl = header + open("dazzler.bit", "rb").read()[96:]
 
         desync = bytes([int(w, 16) for w in "30 a1 00 0d".split()])
         p = fl.index(desync)
