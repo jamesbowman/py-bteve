@@ -165,14 +165,21 @@ def make_fallback():
 
     return gd.buf
 
+def sector_1():
+    gd = Gameduino()
+    gd.setup_1280x720()
+    gd.pack()
+    return gd.buf
+
 def make_flash():
     gd = Gameduino()
     blob_addr = 0x8000
     gd.cmd_inflate(blob_addr)
-    img = open("unified.blob", "rb").read()
+    img = open("unified.blob", "rb").read() + sector_1()
+    assert len(img) == 8192
     c = eve.align4(zlib.compress(img, 9))
     gd.cc(c)
-    gd.cmd_flashupdate(0, blob_addr, 0x1000)
+    gd.cmd_flashupdate(0, blob_addr, len(img))
     gd.cmd_flashfast()
     return gd.buf
 
@@ -477,6 +484,11 @@ def make_loadflash(fn, fl):
     b = (padw * struct.pack("I", 0xffffff5b)) + b
     with open(fn, "wb") as h:
         h.write(b)
+
+    with open(fn.replace(".bin", ".h"), "wt") as f:
+        for i in range(0, len(b), 100):
+            f.write("".join(["%d," % x for x in b[i:i + 100]]) + "\n")
+
     return
 
     with open(fn, "wt") as h:
@@ -533,12 +545,12 @@ def make_bootstream(streams):
 
         desync = bytes([int(w, 16) for w in "30 a1 00 0d".split()])
         p = fl.index(desync)
-        set_general5 = bytes([int(w, 16) for w in "32 e1 12 34".split()])
-        fl = fl[:p] + set_general5 + fl[p:]
+        set_general5 = bytes([int(w, 16) for w in "32 e1 da 22".split()])
+        fl_loader = fl[:p] + set_general5 + fl[p:]
 
         with open("_jtagboot.h", "wt") as f:
-            for i in range(0, len(fl), 100):
-                f.write("".join(["%d,"%b for b in fl[i:i + 100]]) + "\n")
+            for i in range(0, len(fl_loader), 100):
+                f.write("".join(["%d,"%b for b in fl_loader[i:i + 100]]) + "\n")
 
         fl = fl.ljust(0x54000, b'\xff')
         make_loadflash("_loadflash_min.bin", fl)
@@ -693,4 +705,5 @@ if __name__ == "__main__":
     # preview(fa)
     dump_include("_fallback.fs", fa)
     # preview(te)
-    make_bootstream([po, te])
+    # make_bootstream([po, te]) # xxx does not fit on teensy?!
+    make_bootstream([po])
