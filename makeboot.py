@@ -16,7 +16,7 @@ import common
 random.seed(7)
 rr = random.randrange
 
-__VERSION__ = "1.0.4"
+__VERSION__ = "1.0.5"
 
 def gentext(s):
     fn = "../../.fonts/IBMPlexSans-SemiBold.otf"
@@ -470,7 +470,6 @@ def make_loadflash(fn, fl):
     gd = Gameduino()
     gd.cmd_inflate(LP)
     gd.cc(eve.align4(zlib.compress(fl)))
-    gd.cmd_memcrc(0, len(fl), 0)
     ecrc = crc(fl)
 
     gd.cmd_memwrite(0xffff8, 8)
@@ -489,182 +488,46 @@ def make_loadflash(fn, fl):
         for i in range(0, len(b), 100):
             f.write("".join(["%d," % x for x in b[i:i + 100]]) + "\n")
 
-    return
-
-    with open(fn, "wt") as h:
-        h.write("0 MUX0 CSPI stream : m >spid ; hex\n")
-        db = array.array("I", gd.buf)
-        l = []
-        for x in db:
-            l += ["%x." % x, "m"]
-        l += ["result .x .x"]
-        h.write(textwrap.fill(" ".join(l), 127) + "\n")
-        h.write("( expect %08X )\n" % ecrc)
-
-        s = sum(fl[:]) & 0xffff
-        print("Expected checksum %04x" % s)
-        h.write("$%x. e2fl\n" % (len(fl)))
-        h.write("$%x. fl.check \ expect %x\n" % (len(fl), s))
-        h.write("decimal\n")
+def bootheader(s):
+    return (
+        bytes([0xda,0x22,0x1e,0x55]) +
+        (s+b"\x00").ljust(32, b'\xff'))
 
 def make_bootstream(streams):
-    gd = Gameduino()
-    gd.setup_1280x720()
+    fl = (
+        bootheader(b"Standard boot image") +
+        open("dazzler.bit", "rb").read()[96:])
 
-    if 0:
-        gd.cmd_loadimage(0, 0)
-        (w, h) = Image.open("gameduino.png").size
-        gd.cc(eve.align4(open("gameduino.png", "rb").read()))
-        gd.ClearColorRGB(0x20, 0x00, 0x00)
-        gd.Clear()
-        gd.Begin(eve.BITMAPS)
-        gd.Vertex2ii((1280 - w) // 2, (720 - h) // 2)
-        gd.swap()
+    desync = bytes([0x30, 0xa1, 0x00, 0x0d])
+    set_general5 = bytes([0x32, 0xe1, 0xda, 0x22])
+    fl_loader = fl.replace(desync, desync + set_general5)
 
-    if 1:
-        gd.ClearColorRGB(0xff, 0xff, 0xff)
-        gd.SaveContext()
-        gd.Clear()
-        gd.ClearColorRGB(0, 0, 0)
-        gd.ScissorSize(1280 - 2, 720 - 2)
-        gd.ScissorXY(1, 1)
-        gd.Clear()
+    with open("_jtagboot.h", "wt") as f:
+        for i in range(0, len(fl_loader), 100):
+            f.write("".join(["%d,"%b for b in fl_loader[i:i + 100]]) + "\n")
 
-        (x0, x1) = (20, 1280 - 20)
-        (y, H, Y) = (20, 80, 120)
-        for i,(cname, rgb) in enumerate([("red", 0xff0000), ("green", 0xff00), ("blue", 0xff), ("white", 0xffffff)]):
-            gd.ScissorSize(x1 - x0, H)
-            gd.ScissorXY(x0, y)
-            gd.cmd_gradient(x0, 0, 0x000000, x1, 0, rgb)
-            y += Y
-        gd.RestoreContext()
+    fl = fl.ljust(0x54000, b'\xff')
+    make_loadflash("_loadflash_min.bin", fl)
 
-        gd.swap()
+    def autoexec(cmd):
+        return (fl + cmd).ljust(0x54100, b'\xff')
+    make_loadflash("_loadflash_dev.bin", autoexec(b'." DEV BUILD AUTOEXEC "'))
 
-        header = bytes([0xda,0x22,0x1e,0x55]) + b"Standard boot image\x00".ljust(32, b'\xff')
-        fl = header + open("dazzler.bit", "rb").read()[96:]
+    def cust():
+        f = autoexec(b'poweron')
+        f = f.ljust(512 * 1024, b'\xff')
+        f += struct.pack("H", 0x947a)
+        for s in streams:
+            f += struct.pack("I", len(s)) + s
+        f += b'\xff' * (-len(f) & 0xff)
+        return f
+    make_loadflash("_loadflash_cust.bin", cust())
 
-        desync = bytes([int(w, 16) for w in "30 a1 00 0d".split()])
-        p = fl.index(desync)
-        set_general5 = bytes([int(w, 16) for w in "32 e1 da 22".split()])
-        fl_loader = fl[:p] + set_general5 + fl[p:]
-
-        with open("_jtagboot.h", "wt") as f:
-            for i in range(0, len(fl_loader), 100):
-                f.write("".join(["%d,"%b for b in fl_loader[i:i + 100]]) + "\n")
-
-        fl = fl.ljust(0x54000, b'\xff')
-        make_loadflash("_loadflash_min.bin", fl)
-
-        def autoexec(cmd):
-            return (fl + cmd).ljust(0x54100, b'\xff')
-        make_loadflash("_loadflash_dev.bin", autoexec(b'." DEV BUILD AUTOEXEC "'))
-
-        def cust():
-            f = autoexec(b'poweron')
-            f = f.ljust(512 * 1024, b'\xff')
-            f += struct.pack("H", 0x947a)
-            for s in streams:
-                f += struct.pack("I", len(s)) + s
-            f += b'\xff' * (-len(f) & 0xff)
-            return f
-        make_loadflash("_loadflash_cust.bin", cust())
-
-        if 1:
-            fl = fl.ljust(512 * 1024, b'\xff')
-            fl += struct.pack("H", 0x947a)
-            for s in streams:
-                fl += struct.pack("I", len(s)) + s
-
-        gd = Gameduino()
-        gd.cmd_inflate(0x1000)
-        gd.cc(eve.align4(zlib.compress(fl)))
-        ecrc = crc(fl)
-
-        gd.cmd_memwrite(0xffff8, 8)
-        gd.c4(len(fl))
-        gd.c4(ecrc)
-        gd.cmd_memcrc(0x1000, len(fl), 0)
-        print('Expected CRC %x' % ecrc)
-
-        with open("_loadflash2.fs", "wt") as h:
-            h.write("0 MUX0 CSPI stream : m >spid ; hex\n")
-            db = array.array("I", gd.buf)
-            l = []
-            for x in db:
-                l += ["%x." % x, "m"]
-            l += ["result .x .x"]
-            h.write(textwrap.fill(" ".join(l), 127) + "\n")
-            h.write("( expect %08X )\n" % ecrc)
-
-            s = sum(fl[:]) & 0xffff
-            print("Expected checksum %04x" % s)
-            h.write("$%x. e2fl\n" % (len(fl)))
-            h.write("$%x. fl.check \ expect %x\n" % (len(fl), s))
-            h.write("decimal\n")
-
-        b = gd.buf
-        padw = (-len(b) & 0xff) // 4
-        b = (padw * struct.pack("I", 0xffffff5b)) + b
-
-        with open("_loadflash2.bin", "wb") as h:
-            h.write(b)
-
-        with open("_loadflash2.h", "wt") as f:
-            for i in range(0, len(b), 100):
-                f.write("".join(["%d,"%x for x in b[i:i + 100]]) + "\n")
-
-        return
-
-        with open("_loadflash.fs", "wt") as h:
-            h.write("manufacturer hex\n")
-            h.write(": m >spi ;\n")
-            # r ( u n ) write u n times
-            h.write(": r 0 do dup >spi loop drop ;\n")
-            def addr(a):
-                return "%x m %x m %x m " % (0xff & (a >> 16), 0xff & (a >> 8), 0xff & a)
-            fl = fl[:]
-            for i in range(0, len(fl), 4096):
-                h.write("20 wcmd " + addr(i) + "notbusy \ %#x\n" % i)
-                pg = fl[i:i+4096]
-                for j in range(0, len(pg), 256):
-                    s = pg[j:j+256]
-                    if set(s) != {0xff}:
-                        h.write("02 wcmd " + addr(i + j) + "\ %#x \n" % (i + j))
-                        if 1:
-                            l = []
-                            while s:
-                                (v, n) = [(k,len(list(v))) for (k,v) in groupby(s,int)][0]
-                                if n > 1:
-                                    s = s[n:]
-                                    l.append("%x %x r" % (v, n))
-                                else:
-                                    c = s[0]
-                                    s = s[1:]
-                                    l.append("%x m" % c)
-                            l.append("notbusy")
-                            h.write(textwrap.fill(" ".join(l), 126) + "\n")
-                        else:
-                            h.write(textwrap.fill(" ".join(["%x m" % c for c in s]), 127))
-                            h.write("\nnotbusy\n")
-            print(len(fl))
-            s = sum(fl[:]) & 0xffff
-            print("Expected checksum %04x" % s)
-            with open("flash.bin", "wb") as f:
-                f.write(fl)
-            checkline = "$%x. fl.check \ expect %x\n" % (len(fl), s)
-            print(checkline)
-            h.write(checkline)
-            h.write("decimal\n")
-
-            if 0:
-                with open("dump.hex", "wt") as f:
-                    for i in range(0x26000, 0x28000, 16):
-                        f.write("%04X  " % (i & 0xffff))
-                        for j in range(16):
-                            c = fl[i + j]
-                            f.write("%02X " % c)
-                        f.write("\n")
+def make_liteboot(title, hexfile, binfile):
+    with open(hexfile) as f:
+        code = array.array("H", [int(w, 16) for w in f]).tobytes()
+    fl = (bootheader(title) + b'aZ' + code).ljust(0x54100, b'\xff')
+    make_loadflash(binfile, fl)
 
 def dump_include(filename, bb, op = ">spi"):
     tb = " ".join([("%d %s" % (b, op)) for b in bb])
@@ -708,3 +571,4 @@ if __name__ == "__main__":
     # preview(te)
     # make_bootstream([po, te]) # xxx does not fit on teensy?!
     make_bootstream([po])
+    make_liteboot(b"Asteroids", "../gd3x-dazzler/j1/build/asteroids.hex", "_loadflash_asteroids.bin")
