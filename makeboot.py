@@ -1,3 +1,4 @@
+import sys
 import textwrap
 import struct
 import array
@@ -523,10 +524,15 @@ def make_bootstream(streams):
         return f
     make_loadflash("_loadflash_cust.bin", cust())
 
-def make_liteboot(title, hexfile, binfile):
+def make_liteboot(title, hexfile, streams, binfile):
     with open(hexfile) as f:
         code = array.array("H", [int(w, 16) for w in f]).tobytes()
-    fl = (bootheader(title) + b'aZ' + code).ljust(0x54100, b'\xff')
+    fl = (bootheader(title) + b'aZ' + code)
+    fl = fl.ljust(512 * 1024, b'\xff')
+    fl += struct.pack("H", 0x947a)
+    for s in streams:
+        fl += struct.pack("I", len(s)) + s
+    fl += b'\xff' * (-len(fl) & 0xff)
     make_loadflash(binfile, fl)
 
 def dump_include(filename, bb, op = ">spi"):
@@ -571,4 +577,22 @@ if __name__ == "__main__":
     # preview(te)
     # make_bootstream([po, te]) # xxx does not fit on teensy?!
     make_bootstream([po])
-    make_liteboot(b"Asteroids", "../gd3x-dazzler/j1/build/asteroids.hex", "_loadflash_asteroids.bin")
+
+    gd = Gameduino()
+    gd.setup_1280x720()
+
+    ld = common.Loader(gd)
+    ld.add = ld.uadd
+    ld.Lastc("assets/asteroids_internal.astc")
+
+    gd.Clear()
+    gd.cmd_text(640, 360, 31, eve.OPT_CENTER, "Asteroids is loading")
+    gd.Vertex2f(0, 0)
+    gd.swap()
+    make_liteboot(b"Asteroids", "../gd3x-dazzler/j1/build/asteroids.hex", [gd.buf], "_loadflash_asteroids.bin")
+
+    gd = Gameduino()
+    gd.setup_1280x720()
+    with open("../gd3x-dazzler/textmode/textmode.gd2", "rb") as f:
+        textmode_l = f.read()
+    make_liteboot(b"Text mode", "../gd3x-dazzler/j1/build/textmode.hex", [gd.buf + textmode_l], "_loadflash_textmode.bin")
