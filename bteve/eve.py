@@ -256,6 +256,9 @@ class EVE:
     def cmd_inflate2(self, *args):
         self.cmd(0x50, "II", args)
 
+    def cmd_fillwidth(self, *args):
+        self.cmd(0x58, "I", args)
+
     def cmd_appendf(self, *args):
         self.cmd(0x59, "II", args)
 

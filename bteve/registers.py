@@ -110,6 +110,7 @@ OPT_SIGNED             = const(256)
 OPT_FULLSCREEN         = const(8)
 OPT_MEDIAFIFO          = const(16)
 OPT_FORMAT             = const(4096)     # For 815
+OPT_FILL               = const(8192)     # For 815
 
 LINEAR_SAMPLES         = const(0)
 ULAW_SAMPLES           = const(1)
