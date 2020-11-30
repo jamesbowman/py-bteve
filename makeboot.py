@@ -13,6 +13,7 @@ import binascii
 def crc(s):     # CRC-32 of string s
     return binascii.crc32(s) & 0xffffffff
 import common
+from spidriver import SPIDriver
 
 random.seed(7)
 rr = random.randrange
@@ -32,8 +33,9 @@ def gentext(s):
 
 def preview(cmdbuf):
     print('preview is', len(cmdbuf), 'bytes')
-    from gameduino_spidriver import GameduinoSPIDriver
-    gd = GameduinoSPIDriver()
+    d = SPIDriver("/dev/serial/by-id/usb-FTDI_FT230X_Basic_UART_DO02C71A-if00-port0")
+    from bteve.gameduino_spidriver import GameduinoSPIDriver
+    gd = GameduinoSPIDriver(d)
     gd.init()
     gd.cc(cmdbuf)
     gd.finish()
@@ -241,6 +243,112 @@ def make_bringup():
 
         gd.swap()
 
+    return gd.buf
+
+# 8-bit display, controlled by ClearStencil:
+#   0-3 slot highlight
+#   4   microSD on
+#   5   Player 1 on
+#   6   Player 2 on
+
+def make_menu():
+    gd = Gameduino()
+
+    if 1:
+        gd.cmd_memwrite(eve.REG_MACRO_0, 4)
+        gd.ClearStencil(0x10 | 0x08 | 2)
+
+    if 0:
+        gd.cmd_memzero(0x0, 32 * 8)
+        def setlabel(n, s):
+            gd.cmd_memwrite(32 * n, len(s) + 1)
+            gd.cc(eve.align4(s + bytes([0])))
+        setlabel(0, b"Dazzler boot 1.1.0")
+        setlabel(1, b"Text mode 1.1.0")
+        setlabel(2, b"Asteroids")
+
+    gd.setup_1280x720()
+
+    ld = common.Loader(gd, 0x200)
+    ld.add = ld.uadd
+
+    # Handle 0: microSD
+    gd.BitmapHandle(0)
+    im = Image.open("assets/microsd.png").convert("L")
+    ld.L8(im)
+
+    # Handle 1: Wii
+    gd.BitmapHandle(1)
+    im = Image.open("assets/Wii_Classic_Controller_Icon.png").convert("L")
+    ld.L8(im)
+
+    gd.VertexFormat(2)
+    gd.ClearColorRGB(0x20, 0x00, 0x00)
+    gd.Macro(0)
+    gd.Clear()
+    gd.StencilMask(0)
+
+    rim = [
+        (96, (0x40, 0x40, 0x40)),
+        (64, (0x18, 0x00, 0x00))]
+
+    px = 110 - 4
+    for s in range(8):
+        y = 90 * s
+        gd.Begin(eve.RECTS)
+        for (w,col) in rim:
+            gd.ColorRGB(*col)
+            gd.LineWidth(w)
+            gd.Vertex2f(110, y + 10)
+            gd.Vertex2f(700, y + 80)
+
+        gd.SaveContext()
+        gd.StencilFunc(eve.EQUAL, s, 0x07)
+        gd.ColorRGB(0x40, 0x40, 0x40)
+        gd.Vertex2f(110, y + 10)
+        gd.Vertex2f(700, y + 80)
+        gd.RestoreContext()
+
+        gd.Begin(eve.POINTS)
+        for (w,col) in rim:
+            gd.ColorRGB(*col)
+            gd.PointSize(16 * 20 + w)
+            gd.Vertex2f(px, y + 45)
+
+        gd.ColorRGB(0xff, 0xff, 0xff)
+        gd.cmd_number(px, y + 45, 29, eve.OPT_CENTER, s)
+        gd.cmd_text(160, y + 45, 30, eve.OPT_CENTERY | eve.OPT_FORMAT, "%s", 32 * s)
+
+    s = "Press A to launch the slot. Press X to load it from microSD"
+    gd.ColorRGB(255, 255, 255)
+    gd.cmd_fillwidth(400)
+    gd.cmd_text(810, 110, 30, eve.OPT_FILL, s)
+
+    gd.Begin(eve.BITMAPS)
+
+    def light(mask, dr):
+        gd.StencilFunc(eve.ALWAYS, 0, 0)
+        gd.ColorRGB(0x40, 0x40, 0x40)
+        dr()
+        gd.StencilFunc(eve.EQUAL, mask, mask)
+        gd.ColorRGB(0xc0, 0xc0, 0xc0)
+        dr()
+
+    gd.BitmapHandle(0)
+    light(0x08, lambda: gd.Vertex2f(740, 610))
+
+    gd.BitmapHandle(1)
+    light(0x10, lambda: gd.Vertex2f(824, 600))
+
+    light(0x20, lambda: gd.Vertex2f(1050, 600))
+
+    gd.swap()
+
+    for i in range(0):
+        for j in range(10):
+            gd.cmd_sync()
+        gd.cmd_memwrite(eve.REG_MACRO_0, 4)
+        gd.ClearStencil(i)
     return gd.buf
 
 def poweron():
@@ -465,12 +573,13 @@ def make_textmode():
     return gd.buf
 
 def make_loadflash(fn, fl):
-    print('%s: bitstream is %d bytes, compresses to %d bytes' % (fn, len(fl), len(zlib.compress(fl, 9))))
+    cd = zlib.compress(fl, 9)
+    print('%s: bitstream is %d bytes, compresses to %d bytes' % (fn, len(fl), len(cd)))
     assert len(fl) % 256 == 0, len(fl)
     LP = 0x1000 # load point
     gd = Gameduino()
     gd.cmd_inflate(LP)
-    gd.cc(eve.align4(zlib.compress(fl)))
+    gd.cc(eve.align4(cd))
     ecrc = crc(fl)
 
     gd.cmd_memwrite(0xffff8, 8)
@@ -492,28 +601,23 @@ def make_loadflash(fn, fl):
 def bootheader(s):
     return (
         bytes([0xda,0x22,0x1e,0x55]) +
-        (s+b"\x00").ljust(32, b'\xff'))
+        (s.encode('utf-8') + b"\x00").ljust(32, b'\xff'))
 
-def make_bootstream(streams):
-    fl = (
-        bootheader(b"Standard boot image") +
-        open("dazzler.bit", "rb").read()[96:])
-
+with open("dazzler.bit", "rb") as f:
+    dazzler_bit = f.read()[96:]
     desync = bytes([0x30, 0xa1, 0x00, 0x0d])
     set_general5 = bytes([0x32, 0xe1, 0xda, 0x22])
-    fl_loader = fl.replace(desync, desync + set_general5)
+    dazzler_bit = dazzler_bit.replace(desync, desync + set_general5)
 
-    with open("_jtagboot.h", "wt") as f:
-        for i in range(0, len(fl_loader), 100):
-            f.write("".join(["%d,"%b for b in fl_loader[i:i + 100]]) + "\n")
+with open("_jtagboot.h", "wt") as f:
+    for i in range(0, len(dazzler_bit), 100):
+        f.write("".join(["%d,"%b for b in dazzler_bit[i:i + 100]]) + "\n")
 
+def make_heavyboot(title, streams, binfile):
+    fl = bootheader(title) + dazzler_bit
     fl = fl.ljust(0x54000, b'\xff')
-    make_loadflash("_loadflash_min.bin", fl)
-
     def autoexec(cmd):
         return (fl + cmd).ljust(0x54100, b'\xff')
-    make_loadflash("_loadflash_dev.bin", autoexec(b'." DEV BUILD AUTOEXEC "'))
-
     def cust():
         f = autoexec(b'poweron')
         f = f.ljust(512 * 1024, b'\xff')
@@ -522,7 +626,7 @@ def make_bootstream(streams):
             f += struct.pack("I", len(s)) + s
         f += b'\xff' * (-len(f) & 0xff)
         return f
-    make_loadflash("_loadflash_cust.bin", cust())
+    make_loadflash(binfile, cust())
 
 def make_liteboot(title, hexfile, streams, binfile):
     with open(hexfile) as f:
@@ -572,12 +676,18 @@ if __name__ == "__main__":
     po = poweron()
     te = make_textmode()
     fa = make_fallback()
-    # preview(fa)
+    me = make_menu()
+    # print([hex(i) for i in array.array('I', me[:32])])
+    # preview(me)
     dump_include("_fallback.fs", fa)
     # preview(te)
-    # make_bootstream([po, te]) # xxx does not fit on teensy?!
-    make_bootstream([po])
 
+    # ---------------------------- Base
+    make_heavyboot("Dazzler boot (%s)" % __VERSION__,
+                   [po, me],
+                   "_loadflash_base.bin")
+
+    # ---------------------------- Asteroids
     gd = Gameduino()
     gd.setup_1280x720()
 
@@ -589,10 +699,17 @@ if __name__ == "__main__":
     gd.cmd_text(640, 360, 31, eve.OPT_CENTER, "Asteroids is loading")
     gd.Vertex2f(0, 0)
     gd.swap()
-    make_liteboot(b"Asteroids", "../gd3x-dazzler/j1/build/asteroids.hex", [gd.buf], "_loadflash_asteroids.bin")
+    make_liteboot("Asteroids",
+                  "../gd3x-dazzler/j1/build/asteroids.hex",
+                  [gd.buf],
+                  "_loadflash_asteroids.bin")
 
+    # ---------------------------- Textmode
     gd = Gameduino()
     gd.setup_1280x720()
     with open("../gd3x-dazzler/textmode/textmode.gd2", "rb") as f:
         textmode_l = f.read()
-    make_liteboot(b"Text mode", "../gd3x-dazzler/j1/build/textmode.hex", [gd.buf + textmode_l], "_loadflash_textmode.bin")
+    make_liteboot("Text mode",
+                  "../gd3x-dazzler/j1/build/textmode.hex",
+                  [gd.buf + textmode_l],
+                  "_loadflash_textmode.bin")
