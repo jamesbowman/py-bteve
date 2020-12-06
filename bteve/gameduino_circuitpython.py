@@ -25,7 +25,7 @@ class GameduinoCircuitPython(gameduino.Gameduino):
 
     def controllers(self):
         self.daz.value = False
-        bb = bytearray(24)
+        bb = bytearray(26)
         self.sp.readinto(bb)
         # print('raw controllers', bb)
         self.daz.value = True
@@ -48,7 +48,7 @@ class GameduinoCircuitPython(gameduino.Gameduino):
             })
             return r
 
-        return (decode1(bb[0:6]), decode1(bb[12:18]))
+        return (decode1(bb[2:8]), decode1(bb[14:20]))
 
     def transfer(self, wr, rd = 0):
         self.cs.value = False

@@ -131,4 +131,5 @@ else:
     from spidriver import SPIDriver
     gd = eve.GameduinoSPIDriver(SPIDriver(sys.argv[1]))
 gd.init()
+
 FruitGame(gd).play()

@@ -1,4 +1,5 @@
 import time
+import struct
 from .gameduino import Gameduino
 
 class GameduinoSPIDriver(Gameduino):
@@ -39,9 +40,15 @@ class GameduinoSPIDriver(Gameduino):
         while 0:
             print(self.controllers())
 
+    def dazzler_cmd(self, a, b = 0):
+        self.d.setb(0)
+        rr = self.d.writeread(struct.pack("BB", a, b))
+        self.d.setb(1)
+        return struct.unpack("BB", rr)
+
     def controllers(self):
         self.d.setb(0)
-        bb = self.d.writeread(b'\x00' * 24)
+        bb = self.d.writeread(b'\x00' * 26)
         self.d.setb(1)
 
         def decode1(b):
@@ -62,7 +69,7 @@ class GameduinoSPIDriver(Gameduino):
             })
             return r
 
-        return (decode1(bb[0:6]), decode1(bb[12:18]))
+        return (decode1(bb[2:8]), decode1(bb[14:20]))
 
     def transfer(self, wr, rd = 0):
         self.d.sel()
