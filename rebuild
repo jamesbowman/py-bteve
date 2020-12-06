@@ -1,0 +1,5 @@
+VERILOG=~/git/gd3x-dazzler/
+cp $VERILOG/dazzler.bit .
+python makeboot.py
+cp _*.fs _*.bin $VERILOG/j1/swapforth
+cp _*.h ~/git/praxic/dazzler-loader/
