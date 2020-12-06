@@ -5,6 +5,7 @@ import array
 from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageChops
 import bteve as eve
 import zlib
+import wave
 from io import BytesIO
 from itertools import groupby
 from gameduino2.convert import convert
@@ -18,7 +19,7 @@ from spidriver import SPIDriver
 random.seed(7)
 rr = random.randrange
 
-__VERSION__ = "1.0.5"
+__VERSION__ = "1.0.6"
 
 def gentext(s):
     fn = "../../.fonts/IBMPlexSans-SemiBold.otf"
@@ -664,6 +665,13 @@ def make_sector_1():
         f.write(",".join([str(s) for s in cd]))
         f.write("\n")
 
+def sample(fn):
+    with wave.open(fn, 'rb') as wf:
+        nf = wf.getnframes()
+        by = array.array('H', wf.readframes(nf))
+        mono = by[::2]
+        return mono.tobytes()
+
 if __name__ == "__main__":
     make_sector_1()
 
@@ -672,6 +680,8 @@ if __name__ == "__main__":
 
     fl = make_flash()
     dump_init("_flash.fs", fl)
+
+    au = sample("bassoon-g4.wav")
 
     po = poweron()
     te = make_textmode()
@@ -684,12 +694,27 @@ if __name__ == "__main__":
 
     # ---------------------------- Base
     make_heavyboot("Dazzler boot (%s)" % __VERSION__,
-                   [po, me],
+                   [po, me, au],
                    "_loadflash_base.bin")
 
     # ---------------------------- Asteroids
     gd = Gameduino()
     gd.setup_1280x720()
+
+
+    sfx = [
+        "explode1.wav",
+        "explode2.wav",
+        "explode3.wav",
+        "fire.wav",
+        "life.wav",
+        "lsaucer.wav",
+        "sfire.wav",
+        "ssaucer.wav",
+        "thrust.wav",
+        "thumphi.wav",
+        "thumplo.wav"
+    ]
 
     ld = common.Loader(gd)
     ld.add = ld.uadd
@@ -699,6 +724,7 @@ if __name__ == "__main__":
     gd.cmd_text(640, 360, 31, eve.OPT_CENTER, "Asteroids is loading")
     gd.Vertex2f(0, 0)
     gd.swap()
+
     make_liteboot("Asteroids",
                   "../gd3x-dazzler/j1/build/asteroids.hex",
                   [gd.buf],
