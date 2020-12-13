@@ -1,0 +1,5 @@
+set -e
+
+D="$1"
+rsync -av bteve/{eve.py,gameduino_circuitpython.py,gameduino.py,registers.py} $D/lib/bteve/
+sync
