@@ -1,28 +1,34 @@
+import sys
 import random
-from gameduino_spidriver import GameduinoSPIDriver
-import registers as gd3
+import bteve as eve
+
+import game
 
 PADDLE_SIZE = 45
 
 def draw_court(gd):
     gd.ClearColorRGB(0, 10, 0)
     gd.Clear()
-    gd.LineWidth(16 * 5)
-    gd.PointSize(16 * 5)
-    gd.Begin(gd3.LINES)
+    gd.LineWidth(10)
+    gd.PointSize(10)
+    gd.Begin(eve.LINES)
     for y in (5, 720 - 5):
         gd.Vertex2f(40, y)
         gd.Vertex2f(1240, y)
-    gd.Begin(gd3.POINTS)
+    gd.Begin(eve.POINTS)
     for y in range(20, 710, 20):
         gd.Vertex2f(640, y)
 
+def sfx(gd, inst, midi = 0):
+    gd.cmd_regwrite(eve.REG_SOUND, inst + (midi << 8))
+    gd.cmd_regwrite(eve.REG_PLAY, 1)
+    gd.flush()
+
 class Ball:
-    def __init__(self):
-        self.x = 320
-        self.y = 360
-        self.xv = 7
-        self.yv = 8
+    def __init__(self, gd):
+        self.gd = gd
+        self.pos = game.Point(320, 360)
+        self.vel = game.Point(7, 8)
         self.hide()
 
     def hide(self):
@@ -31,34 +37,39 @@ class Ball:
     def move(self, py):
         if self.servetimer != 0:
             self.servetimer -= 1
+            if self.servetimer == 0:
+                sfx(gd, 0x18, 68)
             return (0, 0)
-        x = self.x + self.xv
-        y = self.y + self.yv
-        if (self.xv < 0) and (30 < x < 45) and abs(y - py[0]) < PADDLE_SIZE:
-            self.xv *= -1
-            self.yv += random.randrange(-1, 2)
-        if (self.xv > 0) and (1225 < x < 1235) and abs(y - py[1]) < PADDLE_SIZE:
-            self.xv *= -1
-            self.yv += random.randrange(-1, 2)
-        if not (10 < y < 710):
-            self.yv *= -1
-        (self.x, self.y) = (x, y)
-        if not (0 < x < 1280):
-            self.x -= (30 * self.xv)
-            self.xv *= -1
-            self.yv = random.randrange(-7, 8)
+        n = self.pos + self.vel
+
+        edge_l = (self.vel.x < 0) and (30 < n.x < 45)
+        edge_r = (self.vel.x > 0) and (1225 < n.x < 1235)
+        if (edge_l or edge_r) and abs(n.y - py[edge_r]) < PADDLE_SIZE:
+            self.vel.x *= -1
+            self.vel.y += random.randrange(-1, 2)
+            sfx(gd, 0x10, 62)
+        if not (10 < n.y < 710):
+            self.vel.y *= -1
+            sfx(gd, 0x10, 63)
+        self.pos = n
+        if not (0 < self.pos.x < 1280):
+            self.pos.x -= (30 * self.vel.x)
+            self.vel.x *= -1
+            self.vel.y = random.randrange(-7, 8)
             self.hide()
-            if x < 0:
+            sfx(gd, 0x18, 40)
+            if self.vel.x < 0:
                 return (0, 1)
             else:
                 return (1, 0)
         return (0, 0)
 
-    def draw(self, gd):
+    def draw(self):
+        gd = self.gd
         if self.servetimer == 0:
-            gd.PointSize(16 * 10)
-            gd.Begin(gd3.POINTS)
-            gd.Vertex2f(self.x, self.y)
+            gd.PointSize(16)
+            gd.Begin(eve.POINTS)
+            self.pos.draw(gd)
 
 class Scores:
     def __init__(self):
@@ -70,14 +81,13 @@ class Scores:
 
     def draw(self, gd):
         for (x, s) in zip((640 - 100, 640 + 100), self.s):
-            gd.cmd_number(x, 80, 31, gd3.OPT_CENTER, s)
+            gd.cmd_number(x, 80, 31, eve.OPT_CENTER, s)
 
-if __name__ == "__main__":
-    gd = GameduinoSPIDriver()
+def pong(gd):
     gd.init()
     gd.cmd_romfont(31, 34)
 
-    ball = Ball()
+    ball = Ball(gd)
     scores = Scores()
 
     def control(c, y):
@@ -87,6 +97,8 @@ if __name__ == "__main__":
     while 1:
         gd.finish()
         cc = gd.controllers()
+        if cc[0]['bh'] or cc[1]['bh']:
+            return
         yy = [control(c, y) for (c, y) in zip(cc, yy)]
         scores.update(ball.move(yy))
 
@@ -94,11 +106,18 @@ if __name__ == "__main__":
 
         draw_court(gd)
 
-        gd.LineWidth(16 * 10)
+        gd.LineWidth(20)
         for x,y in [(40, yy[0]), (1240, yy[1])]:
-            gd.Begin(gd3.LINES)
+            gd.Begin(eve.LINES)
             gd.Vertex2f(x, y - PADDLE_SIZE)
             gd.Vertex2f(x, y + PADDLE_SIZE)
-        ball.draw(gd)
+        ball.draw()
         scores.draw(gd)
         gd.swap()
+
+if sys.implementation.name == 'circuitpython':
+    gd = eve.Gameduino()
+else:
+    from spidriver import SPIDriver
+    gd = eve.GameduinoSPIDriver(SPIDriver(sys.argv[1]))
+pong(gd)
