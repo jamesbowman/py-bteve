@@ -126,9 +126,6 @@ class FruitGame:
         if self.time == 0.0:
             gd.cmd_text(640, 360, 31, eve.OPT_CENTER, "PRESS START")
 
-        gd.Begin(eve.POINTS)
-        gd.PointSize(80)
-        gd.Vertex2f(100, 100)
         gd.swap()
 
     def match(self):
