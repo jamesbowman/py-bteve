@@ -13,6 +13,8 @@ class Point:
         return Point(self.x + other.x, self.y + other.y)
     def __sub__(self, other):
         return Point(self.x - other.x, self.y - other.y)
+    def __mul__(self, other):
+        return Point(self.x * other, self.y * other)
     def tuple(self):
         return (self.x, self.y)
     def rotate(self, a):

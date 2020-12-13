@@ -178,7 +178,9 @@ class EVE:
     #
 
     def cmd_romfont(self, *args):
+        self.SaveContext()
         self.cmd(0x3f, "II", args)
+        self.RestoreContext()
 
     def cmd_mediafifo(self, *args):
         self.cmd(0x39, "II", args)

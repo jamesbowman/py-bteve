@@ -84,11 +84,11 @@ class _EVE:
     def Jump(self, dest):
         self.c4((30 << 24) | ((dest & 65535)))
     def LineWidth(self, width):
-        self.c4((14 << 24) | ((width & 4095)))
+        self.c4((14 << 24) | ((int(8 * width) & 4095)))
     def Macro(self, m):
         self.c4((37 << 24) | ((m & 1)))
     def PointSize(self, size):
-        self.c4((13 << 24) | ((size & 8191)))
+        self.c4((13 << 24) | ((int(8 * size) & 8191)))
     def RestoreContext(self):
         self.c4((35 << 24))
     def Return(self):
@@ -156,10 +156,10 @@ class _EVE:
         self.c4((42 << 24) | (((addr) & 4194303)))
 
     def VertexTranslateX(self, x):
-        self.c4((43 << 24) | (((x) & 131071)))
+        self.c4((43 << 24) | (((int(16 * x)) & 131071)))
 
     def VertexTranslateY(self, y):
-        self.c4((44 << 24) | (((y) & 131071)))
+        self.c4((44 << 24) | (((int(16 * y)) & 131071)))
 
     def Nop(self):
         self.c4((45 << 24))
