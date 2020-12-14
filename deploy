@@ -2,4 +2,5 @@ set -e
 
 D="$1"
 rsync -av bteve/{eve.py,gameduino_circuitpython.py,gameduino.py,registers.py} $D/lib/bteve/
+rsync -av code.py game.py examples/{fruit,pong,temperature}.py $D
 sync

@@ -1,7 +1,10 @@
 import sys
 import time
 import struct
-from ._eve import _EVE
+if sys.implementation.name == 'circuitpython':
+    from _eve import _EVE
+else:
+    from ._eve import _EVE
 from .eve import EVE
 from .registers import *
 
@@ -25,9 +28,7 @@ class CoprocessorException(Exception):
 
 class Gameduino(_EVE, EVE):
     def init(self):
-        print('--->')
         self.register(self)
-        print('<---')
 
         self.coldstart()
 
@@ -38,12 +39,13 @@ class Gameduino(_EVE, EVE):
             assert (time.time() - t0) < 1.0, "No response - is device attached?"
 
         self.getspace()
-        print("ID %x  %x %x %x %x" % (
-            self.rd32(REG_ID),
-            self.rd32(0xc0000),
-            self.rd32(REG_HSIZE),
-            self.rd32(REG_VSIZE),
-            self.rd32(REG_CMDB_SPACE)))
+
+        # print("ID %x  %x %x %x %x" % (
+        #     self.rd32(REG_ID),
+        #     self.rd32(0xc0000),
+        #     self.rd32(REG_HSIZE),
+        #     self.rd32(REG_VSIZE),
+        #     self.rd32(REG_CMDB_SPACE)))
 
         self.standard_startup()
 
@@ -73,7 +75,7 @@ class Gameduino(_EVE, EVE):
         self.swap()
         self.cmd_flashread(0, 0x1000, 0x1000)
         self.finish()
-        print('*** Done flash ***')
+        # print('*** Done flash ***')
         time.sleep(.1)
         if self.rd32(0xffc) == 0x7C6A0100:
             self.cc(self.rd(0, 512))
@@ -83,7 +85,7 @@ class Gameduino(_EVE, EVE):
         self.w = self.rd32(REG_HSIZE)
         self.h = self.rd32(REG_VSIZE)
         # self.wr32(REG_GPIO, 0x83)
-        print(self.w, self.h, self.rd32(REG_PCLK), hex(self.rd32(REG_GPIO)))
+        # print(self.w, self.h, self.rd32(REG_PCLK), hex(self.rd32(REG_GPIO)))
         self.cmd_regwrite(REG_GPIO, 0x83)
         time.sleep(.1)
 
@@ -110,6 +112,10 @@ class Gameduino(_EVE, EVE):
     def reserve(self, n):
         while self.space < n:
             self.getspace()
+
+    def is_finished(self):
+        self.getspace()
+        return self.space == FIFO_MAX
             
     def write(self, ss):
         self.reserve(len(ss))
@@ -132,6 +138,26 @@ class Gameduino(_EVE, EVE):
     def is_idle(self):
         self.getspace()
         return self.space == FIFO_MAX
+
+    def wii_classic_pro(self, b):
+        if b[4] & 1 == 0:
+            b = bytes([0, 0, 0, 0, 0xff, 0xff])
+        r4 = '. brt b+ bh b- blt bdd bdr'.split()
+        r = {id: 1 & (~b[4] >> i) for i,id in enumerate(r4)}
+        r5 = 'bdu bdl bzr bx ba by bb bzl'.split()
+        r.update({id: 1 & (~b[5] >> i) for i,id in enumerate(r5)})
+        r.update({
+            'lx' : b[0] & 63,
+            'ly' : b[1] & 63,
+            'rx' : (((b[0] >> 6) & 3) << 3) |
+                   (((b[1] >> 6) & 3) << 1) |
+                   (((b[2] >> 7) & 1)),
+            'ry' : b[2] & 31,
+            'lt' : (((b[2] >> 5) & 3) << 3) |
+                   (((b[3] >> 5) & 7)),
+            'rt' : b[3] & 31,
+        })
+        return r
 
     def result(self, n=1):
         # Return the result field of the preceding command

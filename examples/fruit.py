@@ -6,7 +6,15 @@ import game
 
 rnd = random.randrange
 
-def run(L):
+BOARD = {(x, y) for x in range(8) for y in range(8)}
+
+if sys.implementation.name == 'circuitpython':
+    nstime = time.monotonic_ns
+else:
+    def nstime():
+        return int(time.time * 1e9)
+
+def adjacent(L):
     matches = [L[i]==L[i+1]==L[i+2] for i in range(6)]
     if not True in matches:
         return None
@@ -37,7 +45,6 @@ class FruitGame:
         gd.cmd_romfont(31, 34)
         gd.RestoreContext()
 
-        random.seed(2)
         self.initial()
 
         self.still = [0 for i in range(8)]
@@ -48,10 +55,10 @@ class FruitGame:
     def initial(self):
         while True:
             b = [[rnd(5) for y in range(8)] for x in range(8)]
-            if any([run(r) for r in b]):
+            if any([adjacent(r) for r in b]):
                 continue
             b = [[b[j][i] for j in range(8)] for i in range(8)]
-            if any([run(r) for r in b]):
+            if any([adjacent(r) for r in b]):
                 continue
             self.board = b
             break
@@ -72,6 +79,7 @@ class FruitGame:
     def draw(self, bar = None, fall = 0, swap = None):
         gd = self.gd
         gd.cmd_gradient(0, 0, 0x202040, 0, 720, 0xffd0c0)
+        gd.VertexFormat(3)
 
         if bar is not None:
             gd.Begin(eve.LINES)
@@ -95,9 +103,10 @@ class FruitGame:
         gd.SaveContext()
         if self.time == 0.0:
             gd.ColorA(128)
-        td = {(x, y) for x in range(8) for y in range(8)}
-        if swap is not None:
-            td -= {self.cursor.tuple(), self.cursor2.tuple()}
+        if swap is None:
+            td = BOARD
+        else:
+            td = BOARD - {self.cursor.tuple(), self.cursor2.tuple()}
         for (x, y) in td:
             gd.Cell(self.board[x][y])
             p = FieldPoint(x, y)
@@ -131,7 +140,7 @@ class FruitGame:
     def match(self):
         b = self.board
         for x in range(8):
-            r = run(b[x])
+            r = adjacent(b[x])
             if r is not None:
                 self.scoret += len(r) * 7
                 for i in range(30):
@@ -144,7 +153,7 @@ class FruitGame:
                 return 1
         b = [[b[j][i] for j in range(8)] for i in range(8)]
         for y in range(8):
-            r = run(b[y])
+            r = adjacent(b[y])
             if r is not None:
                 self.scoret += len(r) * 7
                 for i in range(30):
@@ -177,14 +186,13 @@ class FruitGame:
         else:
             self.sfx(eve.TUBA, 44)
             while True:
-                c = gd.controllers()[0]
+                c = self.gd.controllers()[0]
                 if not any(c[b] for b in ['bdl', 'bdr', 'bdu', 'bdd', 'ba', 'bb', 'bx', 'by']):
                     break
             switch()
             self.draw()
 
-    def ui(self):
-        c = gd.controllers()[0]
+    def ui(self, c):
         anypress = any(c[b] for b in ['bdl', 'bdr', 'bdu', 'bdd', 'ba', 'bb', 'bx', 'by'])
         press = anypress and not self.prev_press
         self.prev_press = anypress
@@ -205,29 +213,39 @@ class FruitGame:
                 self.exchange(0, 1)
 
     def play(self):
+        gd = self.gd
         while True:
-            while gd.controllers()[0]['b+'] == 0:
+            while True:
+                cc = gd.controllers()
+                if cc[0]['b+']:
+                    break
+                if cc[0]['bh'] or cc[1]['bh']:
+                    return
                 self.draw()
             self.initial()
             self.reset()
             self.time = 45
 
-            t0 = time.time()
+            t0 = nstime()
             while self.time != 0:
                 gd.finish()
-                self.time = max(0, self.time - (time.time() - t0))
-                self.ui()
-                t0 = time.time()
+                t1 = nstime()
+                d = ((t1 - t0) & 0xffffffff) * 1e-9
+                self.time = max(0, self.time - d)
+
+                cc = gd.controllers()
+                if cc[0]['bh'] or cc[1]['bh']:
+                    return
+                self.ui(cc[0])
+                t0 = nstime()
 
                 self.draw()
-                t0 = time.time()
             self.sfx(eve.ORGAN)
 
 if sys.implementation.name == 'circuitpython':
-    gd = eve.Gameduino()
+    def run(gd):
+        FruitGame(gd).play()
 else:
     from spidriver import SPIDriver
     gd = eve.GameduinoSPIDriver(SPIDriver(sys.argv[1]))
-gd.init()
-
-FruitGame(gd).play()
+    FruitGame(gd).play()

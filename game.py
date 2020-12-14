@@ -5,6 +5,10 @@ def lerp(t, a, b):
     return a + (b - a) * t
 def smoothstep(t):
     return t * t * (3.0 - 2.0 * t)
+def map(x, x0, x1, y0 = 0, y1 = 1):
+    t = (x - x0) / (x1 - x0)
+    t = max(0, min(t, 1))
+    return lerp(t, y0, y1)
 
 class Point:
     def __init__(self, x, y):

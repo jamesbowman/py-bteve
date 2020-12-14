@@ -5,23 +5,20 @@ import bteve as eve
 import game
 
 def temperature(gd, sense):
-    gd.init()
     gd.cmd_romfont(16, 33)
     gd.cmd_romfont(17, 34)
 
     sparkline = []
     t0 = time.time()
+    temp = sense()
+    frames = 0
     while True:
         # Measure temp continuously until CPU is ready to redraw
         # then compute average
 
         gd.flush()
-        n = 1
-        t = sense()
         while not gd.is_finished():
-            n += 1
-            t += sense()
-        t /= n
+            temp = (999 * temp + sense()) / 1000
 
         # Exit if HOME button pressed
         cc = gd.controllers()
@@ -35,13 +32,13 @@ def temperature(gd, sense):
         # Draw dot and measurement
         gd.PointSize(20)
         gd.Begin(eve.POINTS)
-        y = game.map(t, 0, 40, 650, 160)
+        y = game.map(temp, 0, 50, 650, 160)
         gd.Vertex2f(1000, y)
-        gd.cmd_text(1050, int(y), 16, eve.OPT_CENTERY, "%.1f C" % t)
+        gd.cmd_text(1050, int(y), 16, eve.OPT_CENTERY, "%.1f C" % temp)
         
         # Update sparkline every 0.1 s
-        if (time.time() - t0) > 0.1:
-            t0 += 0.1
+        frames += 1
+        if (frames % 6) == 0:
             sparkline.append((1000, y))
             sparkline = sparkline[-90:]
             sparkline = [(x - 10, y) for (x, y) in sparkline]
@@ -52,15 +49,15 @@ def temperature(gd, sense):
             gd.Vertex2f(x, y)
         gd.swap()
 
-if __name__ == "__main__":
-    if sys.implementation.name == 'circuitpython':
-        gd = eve.Gameduino()
-        import microcontroller
-        def celsius():
-            return microcontroller.cpu.temperature
-    else:
-        from spidriver import SPIDriver
-        gd = eve.GameduinoSPIDriver(SPIDriver(sys.argv[1]))
-        def celsius():
-            return 24 + time.time() % 2
+if sys.implementation.name == 'circuitpython':
+    import microcontroller
+    def celsius():
+        return microcontroller.cpu.temperature
+    def run(gd):
+        temperature(gd, celsius)
+elif __name__ == "__main__":
+    from spidriver import SPIDriver
+    gd = eve.GameduinoSPIDriver(SPIDriver(sys.argv[1]))
+    def celsius():
+        return 24 + time.time() % 2
     temperature(gd, celsius)

@@ -38,7 +38,7 @@ class Ball:
         if self.servetimer != 0:
             self.servetimer -= 1
             if self.servetimer == 0:
-                sfx(gd, 0x18, 68)
+                sfx(self.gd, 0x18, 68)
             return (0, 0)
         n = self.pos + self.vel
 
@@ -47,17 +47,17 @@ class Ball:
         if (edge_l or edge_r) and abs(n.y - py[edge_r]) < PADDLE_SIZE:
             self.vel.x *= -1
             self.vel.y += random.randrange(-1, 2)
-            sfx(gd, 0x10, 62)
+            sfx(self.gd, 0x10, 62)
         if not (10 < n.y < 710):
             self.vel.y *= -1
-            sfx(gd, 0x10, 63)
+            sfx(self.gd, 0x10, 63)
         self.pos = n
         if not (0 < self.pos.x < 1280):
             self.pos.x -= (30 * self.vel.x)
             self.vel.x *= -1
             self.vel.y = random.randrange(-7, 8)
             self.hide()
-            sfx(gd, 0x18, 40)
+            sfx(self.gd, 0x18, 40)
             if self.vel.x < 0:
                 return (0, 1)
             else:
@@ -84,7 +84,6 @@ class Scores:
             gd.cmd_number(x, 80, 31, eve.OPT_CENTER, s)
 
 def pong(gd):
-    gd.init()
     gd.cmd_romfont(31, 34)
 
     ball = Ball(gd)
@@ -116,8 +115,9 @@ def pong(gd):
         gd.swap()
 
 if sys.implementation.name == 'circuitpython':
-    gd = eve.Gameduino()
+    def run(gd):
+        pong(gd)
 else:
     from spidriver import SPIDriver
     gd = eve.GameduinoSPIDriver(SPIDriver(sys.argv[1]))
-pong(gd)
+    pong(gd)

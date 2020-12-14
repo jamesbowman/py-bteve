@@ -50,26 +50,7 @@ class GameduinoSPIDriver(Gameduino):
         self.d.setb(0)
         bb = self.d.writeread(b'\x00' * 26)
         self.d.setb(1)
-
-        def decode1(b):
-            r4 = '. brt b+ bh b- blt bdd bdr'.split()
-            r = {id: 1 & (~b[4] >> i) for i,id in enumerate(r4)}
-            r5 = 'bdu bdl bzr bx ba by bb bzl'.split()
-            r.update({id: 1 & (~b[5] >> i) for i,id in enumerate(r5)})
-            r.update({
-                'lx' : b[0] & 63,
-                'ly' : b[1] & 63,
-                'rx' : (((b[0] >> 6) & 3) << 3) |
-                       (((b[1] >> 6) & 3) << 1) |
-                       (((b[2] >> 7) & 1)),
-                'ry' : b[2] & 31,
-                'lt' : (((b[2] >> 5) & 3) << 3) |
-                       (((b[3] >> 5) & 7)),
-                'rt' : b[3] & 31,
-            })
-            return r
-
-        return (decode1(bb[2:8]), decode1(bb[14:20]))
+        return (self.wii_classic_pro(bb[2:8]), self.wii_classic_pro(bb[14:20]))
 
     def transfer(self, wr, rd = 0):
         self.d.sel()
