@@ -34,9 +34,9 @@ class Gameduino(_EVE, EVE):
 
         # self.bringup()
 
-        t0 = time.time()
+        t0 = time.monotonic()
         while self.rd32(REG_ID) != 0x7c:
-            assert (time.time() - t0) < 1.0, "No response - is device attached?"
+            assert (time.monotonic() - t0) < 1.0, "No response - is device attached?"
 
         self.getspace()
 
