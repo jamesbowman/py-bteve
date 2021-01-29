@@ -1,3 +1,4 @@
+import os
 import board
 import busio
 import digitalio
@@ -6,19 +7,18 @@ from .gameduino import Gameduino
 
 class GameduinoCircuitPython(Gameduino):
     def __init__(self):
-        self.cs = digitalio.DigitalInOut(board.D8)
-        self.cs.direction = digitalio.Direction.OUTPUT
-        self.cs.value = True
-
-        self.sd = digitalio.DigitalInOut(board.D9)
-        self.sd.direction = digitalio.Direction.OUTPUT
-        self.sd.value = True
-
-        self.daz = digitalio.DigitalInOut(board.D10)
-        self.daz.direction = digitalio.Direction.OUTPUT
-        self.daz.value = True
-
-        self.sp = busio.SPI(board.D13, MOSI=board.D11, MISO=board.D12)
+        if os.uname().machine == 'Raspberry Pi Pico with rp2040':
+            self.sp = busio.SPI(board.GP2, MOSI=board.GP3, MISO=board.GP4)
+            cs = (board.GP5, board.GP6, board.GP7)
+        else:
+            self.sp = busio.SPI(board.D13, MOSI=board.D11, MISO=board.D12)
+            cs = (board.D8, board.D9, board.D10)
+        def pin(p):
+            r = digitalio.DigitalInOut(p)
+            r.direction = digitalio.Direction.OUTPUT
+            r.value = True
+            return r
+        (self.cs, self.sd, self.daz) = [pin(p) for p in cs]
         while not self.sp.try_lock():
             pass
         self.sp.configure(baudrate=15000000, phase=0, polarity=0)
