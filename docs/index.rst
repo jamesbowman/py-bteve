@@ -30,6 +30,45 @@ Module classes
 
       Restarts the EVE core.
 
+  .. method:: rd(a, n)
+
+      Read directly from EVE memory
+ 
+      :param int a: address in EVE memory
+      :param int n: number of bytes to read
+      :return bytes: memory contents
+
+  .. method:: wr(a, bb)
+
+      Write directly to EVE memory
+ 
+      :param int a: address in EVE memory
+      :param bytes bb: bytes to write
+
+  .. method:: rd32(a)
+
+      Read a 32-bit value from EVE memory
+      :param int a: address in EVE memory
+      :return int: memory contents
+
+  .. method:: wr32(a, v)
+
+      Write a 32-bit value to EVE memory
+ 
+      :param int a: address in EVE memory
+      :param int v: value to write
+
+  .. method:: is_finished()
+
+      Returns True if the EVE command FIFO is empty
+
+      :return bool: True if the EVE command FIFO is empty
+
+      This method is the non-blocking equivalent of
+      :meth:`EVE.finish`.
+
+  .. method:: result(n = 1)
+
 The class :class:`EVE` contains all the methods for acting on the EVE hardware.
 
 .. class:: EVE
@@ -496,11 +535,16 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
 
       Send any queued drawing commands directly to the hardware.
 
+  .. method:: finish()
+
+      Send any queued drawing commands directly to the hardware,
+      and return when they have all cometed execution.
+
   .. method:: cc(b) 
 
       Append bytes to the command FIFO.
 
-      :param bytes b: The bytes to add. The length of the bytes must be a multiple of 4.
+      :param bytes b: The bytes to add. Its length must be a multiple of 4.
 
 
 Module constants
