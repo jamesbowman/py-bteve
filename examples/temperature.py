@@ -9,7 +9,7 @@ def temperature(gd, sense):
     gd.cmd_romfont(17, 34)
 
     sparkline = []
-    t0 = time.time()
+    t0 = time.monotonic()
     temp = sense()
     frames = 0
     while True:
@@ -59,5 +59,5 @@ elif __name__ == "__main__":
     from spidriver import SPIDriver
     gd = eve.GameduinoSPIDriver(SPIDriver(sys.argv[1]))
     def celsius():
-        return 24 + time.time() % 2
+        return 24 + time.monotonic() % 2
     temperature(gd, celsius)
