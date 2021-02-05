@@ -34,7 +34,80 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
 
 .. class:: EVE
 
-  The following methods are simple drawing operations, and simple graphics state.
+  This class includes all graphics drawing operations,
+  graphics state operations, and graphics commands.
+
+  Methods for simple drawing and drawing state:
+  :meth:`Begin`,
+  :meth:`Vertex2f`,
+  :meth:`LineWidth`,
+  :meth:`PointSize`,
+  :meth:`BitmapHandle`,
+  :meth:`Cell`,
+  :meth:`ColorRGB`,
+  :meth:`ColorA`,
+  :meth:`End`,
+  :meth:`Vertex2ii`.
+
+  Methods for controlling and triggering the clear screen operation.
+  :meth:`ClearColorA`
+  :meth:`ClearColorRGB`
+  :meth:`Clear`
+
+  Methods to set the stencil state, allowing conditional drawing and other logial operations.
+  :meth:`StencilFunc`
+  :meth:`StencilMask`
+  :meth:`StencilOp`
+
+  Methods to set the 2D scissor clipping rectangle
+  :meth:`ScissorSize`
+  :meth:`ScissorXY`
+
+  Methods to set the tag state, so that touch events can be attached to screen objects:
+  :meth:`ClearTag`
+  :meth:`TagMask`
+  :meth:`Tag`
+
+  Methods to preserve and restore the graphics state.
+  :meth:`RestoreContext`
+  :meth:`SaveContext`
+
+  Methods to control rendering and display
+  :meth:`swap`
+  :meth:`flush`
+  :meth:`finish`
+
+
+  methods to set the alpha blend state, allowing more advanced transparency and compositing operations:
+  :meth:`AlphaFunc`
+  :meth:`BlendFunc`
+  :meth:`ColorMask`
+
+  Low-level methods to set the bitmap format.
+  (See :meth:`cmd_setbitmap` for a higher-level alternative.)
+  :meth:`BitmapExtFormat`,
+  :meth:`BitmapLayoutH`,
+  :meth:`BitmapLayout`,
+  :meth:`BitmapSizeH`,
+  :meth:`BitmapSize`,
+  :meth:`BitmapSource`,
+  :meth:`BitmapSwizzle`,
+  :meth:`PaletteSource`.
+
+  Low-level methods set the bitmap transform matrix.
+  (See :meth:`cmd_scale`, :meth:`cmd_translate`, :meth:`cmd_setmatrix` etc. for a higher-level alternative.)
+  :meth:`BitmapTransformA`,
+  :meth:`BitmapTransformB`,
+  :meth:`BitmapTransformC`,
+  :meth:`BitmapTransformD`,
+  :meth:`BitmapTransformE`,
+  :meth:`BitmapTransformF`.
+  :meth:`Macro`
+
+  Methods to set the precision and offset used by :meth:`Vertex2f`.
+  :meth:`VertexTranslateX`
+  :meth:`VertexTranslateY`
+  :meth:`VertexFormat`
 
   .. method:: Begin(prim) 
 
@@ -44,26 +117,10 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
 
       Valid primitives are :data:`BITMAPS`, ``POINTS``, ``LINES``, ``LINE_STRIP``, ``EDGE_STRIP_R``, ``EDGE_STRIP_L``, ``EDGE_STRIP_A``, ``EDGE_STRIP_B`` and ``RECTS``.
 
-  .. method:: BitmapHandle(handle) 
-
-      Set the bitmap handle
-
-      :param int handle: bitmap handle. Range 0-31. The initial value is 0
-
-      This value is part of the graphics context and is saved and restored by :meth:`SaveContext` and :meth:`RestoreContext`.
-
-  .. method:: Vertex2ii(x, y, handle, cell) 
-
-      :param int x: x-coordinate in pixels. Range 0-511
-      :param int y: y-coordinate in pixels. Range 0-511
-      :param int handle: bitmap handle. Range 0-31
-      :param int cell: cell number. Range 0-127
-
-      This method is an alternative to :meth:`Vertex2f`.
-
   .. method:: Vertex2f(x, y) 
 
-      Draw a point.
+      Draw a vertex.
+      This operation draws a graphics primitive, depending on the primitive set by :meth:`Begin`.
 
       :param float x: pixel x-coordinate
       :param float y: pixel y-coordinate
@@ -84,13 +141,57 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
 
       This value is part of the graphics context and is saved and restored by :meth:`SaveContext` and :meth:`RestoreContext`.
 
+  .. method:: BitmapHandle(handle) 
+
+      Set the bitmap handle
+
+      :param int handle: bitmap handle. Range 0-31. The initial value is 0
+
+      This value is part of the graphics context and is saved and restored by :meth:`SaveContext` and :meth:`RestoreContext`.
+
   .. method:: Cell(cell) 
 
-      Set the bitmap cell number used for :meth:`Vertex2f` when drawing ``BITMAPS``.
+      Set the bitmap cell number used by :meth:`Vertex2f` when drawing ``BITMAPS``.
 
       :param int cell: bitmap cell number. Range 0-127. The initial value is 0
 
       This value is part of the graphics context and is saved and restored by :meth:`SaveContext` and :meth:`RestoreContext`.
+
+  .. method:: ColorRGB(red, green, blue) 
+
+      Set the drawing color
+
+      :param int red: red value for the current color. Range 0-255. The initial value is 255
+      :param int green: green for the current color. Range 0-255. The initial value is 255
+      :param int blue: blue for the current color. Range 0-255. The initial value is 255
+
+      These values are part of the graphics context and are saved and restored by :meth:`SaveContext` and :meth:`RestoreContext`.
+
+  .. method:: ColorA(alpha) 
+
+      Set the current color alpha
+
+      :param int alpha: alpha for the current color. Range 0-255. The initial value is 255
+
+      This value is part of the graphics context and is saved and restored by :meth:`SaveContext` and :meth:`RestoreContext`.
+
+
+  .. method:: End() 
+
+      End drawing a graphics primitive
+
+      :meth:`Vertex2ii` and :meth:`Vertex2f` calls are ignored until the next :meth:`Begin`.
+
+  .. method:: Vertex2ii(x, y, handle, cell) 
+
+      :param int x: x-coordinate in pixels. Range 0-511
+      :param int y: y-coordinate in pixels. Range 0-511
+      :param int handle: bitmap handle. Range 0-31
+      :param int cell: cell number. Range 0-127
+
+      This method is an alternative to :meth:`BitmapHandle`, :meth:`Cell` and :meth:`Vertex2f`.
+
+  These methods control the clear screen operation
 
   .. method:: ClearColorA(alpha) 
 
@@ -119,13 +220,6 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
       :param int t: clear tag buffer. Range 0-1
 
 
-  .. method:: End() 
-
-      End drawing a graphics primitive
-
-      :meth:`Vertex2ii` and :meth:`Vertex2f` calls are ignored until the next :meth:`Begin`.
-
-  These methods control the alpha blending state, allowing advanced blending and transparency effects.
 
   .. method:: AlphaFunc(func, ref) 
 
@@ -135,9 +229,6 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
       :param int ref: specifies the reference value for the alpha test. Range 0-255. The initial value is 0
 
       These values are part of the graphics context and are saved and restored by :meth:`SaveContext` and :meth:`RestoreContext`.
-
-  These low-level methods set the bitmap format.
-  :meth:`cmd_setbitmap` is a higher-level alternative.
 
   .. method:: BitmapExtFormat(format) 
 
@@ -277,14 +368,6 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
 
       This value is part of the graphics context and is saved and restored by :meth:`SaveContext` and :meth:`RestoreContext`.
 
-  .. method:: ColorA(alpha) 
-
-      Set the current color alpha
-
-      :param int alpha: alpha for the current color. Range 0-255. The initial value is 255
-
-      This value is part of the graphics context and is saved and restored by :meth:`SaveContext` and :meth:`RestoreContext`.
-
   .. method:: ColorMask(r, g, b, a) 
 
       Enable and disable writing of frame buffer color components
@@ -293,16 +376,6 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
       :param int g: allow updates to the frame buffer green component. Range 0-1. The initial value is 1
       :param int b: allow updates to the frame buffer blue component. Range 0-1. The initial value is 1
       :param int a: allow updates to the frame buffer alpha component. Range 0-1. The initial value is 1
-
-      These values are part of the graphics context and are saved and restored by :meth:`SaveContext` and :meth:`RestoreContext`.
-
-  .. method:: ColorRGB(red, green, blue) 
-
-      Set the drawing color
-
-      :param int red: red value for the current color. Range 0-255. The initial value is 255
-      :param int green: green for the current color. Range 0-255. The initial value is 255
-      :param int blue: blue for the current color. Range 0-255. The initial value is 255
 
       These values are part of the graphics context and are saved and restored by :meth:`SaveContext` and :meth:`RestoreContext`.
 
@@ -413,7 +486,7 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
 
   .. method:: VertexFormat(frac) 
 
-      Set the precision of coordinates used for :meth:`Vertex2f`
+      Set the precision of coordinates used by :meth:`Vertex2f`
 
       :param int frac: Number of fractional bits in X,Y coordinates. Range 0-7. The initial value is 4
 
