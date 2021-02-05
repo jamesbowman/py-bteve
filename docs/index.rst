@@ -148,118 +148,6 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
   :meth:`VertexTranslateY`
   :meth:`VertexFormat`
 
-  .. method:: Begin(prim) 
-
-      Begin drawing a graphics primitive
-
-      :param int prim: graphics primitive.
-
-      Valid primitives are :data:`BITMAPS`, ``POINTS``, ``LINES``, ``LINE_STRIP``, ``EDGE_STRIP_R``, ``EDGE_STRIP_L``, ``EDGE_STRIP_A``, ``EDGE_STRIP_B`` and ``RECTS``.
-
-  .. method:: Vertex2f(x, y) 
-
-      Draw a vertex.
-      This operation draws a graphics primitive, depending on the primitive set by :meth:`Begin`.
-
-      :param float x: pixel x-coordinate
-      :param float y: pixel y-coordinate
-
-  .. method:: LineWidth(width) 
-
-      Set the width of rasterized lines
-
-      :param float width: line width in pixels. Range 0-511. The initial value is 1
-
-      This value is part of the graphics context and is saved and restored by :meth:`SaveContext` and :meth:`RestoreContext`.
-
-  .. method:: PointSize(size) 
-
-      Set the diameter of rasterized points
-
-      :param float size: point diameter in pixels. Range 0-1023. The initial value is 1
-
-      This value is part of the graphics context and is saved and restored by :meth:`SaveContext` and :meth:`RestoreContext`.
-
-  .. method:: BitmapHandle(handle) 
-
-      Set the bitmap handle
-
-      :param int handle: bitmap handle. Range 0-31. The initial value is 0
-
-      This value is part of the graphics context and is saved and restored by :meth:`SaveContext` and :meth:`RestoreContext`.
-
-  .. method:: Cell(cell) 
-
-      Set the bitmap cell number used by :meth:`Vertex2f` when drawing ``BITMAPS``.
-
-      :param int cell: bitmap cell number. Range 0-127. The initial value is 0
-
-      This value is part of the graphics context and is saved and restored by :meth:`SaveContext` and :meth:`RestoreContext`.
-
-  .. method:: ColorRGB(red, green, blue) 
-
-      Set the drawing color
-
-      :param int red: red value for the current color. Range 0-255. The initial value is 255
-      :param int green: green for the current color. Range 0-255. The initial value is 255
-      :param int blue: blue for the current color. Range 0-255. The initial value is 255
-
-      These values are part of the graphics context and are saved and restored by :meth:`SaveContext` and :meth:`RestoreContext`.
-
-  .. method:: ColorA(alpha) 
-
-      Set the current color alpha
-
-      :param int alpha: alpha for the current color. Range 0-255. The initial value is 255
-
-      This value is part of the graphics context and is saved and restored by :meth:`SaveContext` and :meth:`RestoreContext`.
-
-
-  .. method:: End() 
-
-      End drawing a graphics primitive
-
-      :meth:`Vertex2ii` and :meth:`Vertex2f` calls are ignored until the next :meth:`Begin`.
-
-  .. method:: Vertex2ii(x, y, handle, cell) 
-
-      :param int x: x-coordinate in pixels. Range 0-511
-      :param int y: y-coordinate in pixels. Range 0-511
-      :param int handle: bitmap handle. Range 0-31
-      :param int cell: cell number. Range 0-127
-
-      This method is an alternative to :meth:`BitmapHandle`, :meth:`Cell` and :meth:`Vertex2f`.
-
-  These methods control the clear screen operation
-
-  .. method:: ClearColorA(alpha) 
-
-      Set clear value for the alpha channel
-
-      :param int alpha: alpha value used when the color buffer is cleared. Range 0-255. The initial value is 0
-
-      This value is part of the graphics context and is saved and restored by :meth:`SaveContext` and :meth:`RestoreContext`.
-
-  .. method:: ClearColorRGB(red, green, blue) 
-
-      Set clear values for red, green and blue channels
-
-      :param int red: red value used when the color buffer is cleared. Range 0-255. The initial value is 0
-      :param int green: green value used when the color buffer is cleared. Range 0-255. The initial value is 0
-      :param int blue: blue value used when the color buffer is cleared. Range 0-255. The initial value is 0
-
-      These values are part of the graphics context and are saved and restored by :meth:`SaveContext` and :meth:`RestoreContext`.
-
-  .. method:: Clear(c, s, t) 
-
-      Clear buffers to preset values
-
-      :param int c: clear color buffer. Range 0-1
-      :param int s: clear stencil buffer. Range 0-1
-      :param int t: clear tag buffer. Range 0-1
-
-
-
   .. method:: AlphaFunc(func, ref) 
 
       Set the alpha test function
@@ -269,18 +157,27 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
 
       These values are part of the graphics context and are saved and restored by :meth:`SaveContext` and :meth:`RestoreContext`.
 
+  .. method:: Begin(prim) 
+
+      Begin drawing a graphics primitive
+
+      :param int prim: graphics primitive.
+
+      Valid primitives are :data:`BITMAPS`, ``POINTS``, ``LINES``, ``LINE_STRIP``, ``EDGE_STRIP_R``, ``EDGE_STRIP_L``, ``EDGE_STRIP_A``, ``EDGE_STRIP_B`` and ``RECTS``.
+
   .. method:: BitmapExtFormat(format) 
 
       Set the bitmap format
 
       :param int format: bitmap pixel format.
 
-  .. method:: BitmapLayoutH(linestride, height) 
+  .. method:: BitmapHandle(handle) 
 
-      Set the source bitmap memory format and layout for the current handle. high bits for large bitmaps
+      Set the bitmap handle
 
-      :param int linestride: high part of bitmap line stride, in bytes. Range 0-7
-      :param int height: high part of bitmap height, in lines. Range 0-3
+      :param int handle: bitmap handle. Range 0-31. The initial value is 0
+
+      This value is part of the graphics context and is saved and restored by :meth:`SaveContext` and :meth:`RestoreContext`.
 
   .. method:: BitmapLayout(format, linestride, height) 
 
@@ -290,12 +187,12 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
       :param int linestride: bitmap line stride, in bytes. Range 0-1023
       :param int height: bitmap height, in lines. Range 0-511
 
-  .. method:: BitmapSizeH(width, height) 
+  .. method:: BitmapLayoutH(linestride, height) 
 
-      Set the screen drawing of bitmaps for the current handle. high bits for large bitmaps
+      Set the source bitmap memory format and layout for the current handle. high bits for large bitmaps
 
-      :param int width: high part of drawn bitmap width, in pixels. Range 0-3
-      :param int height: high part of drawn bitmap height, in pixels. Range 0-3
+      :param int linestride: high part of bitmap line stride, in bytes. Range 0-7
+      :param int height: high part of bitmap height, in lines. Range 0-3
 
   .. method:: BitmapSize(filter, wrapx, wrapy, width, height) 
 
@@ -307,6 +204,13 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
       :param int width: drawn bitmap width, in pixels. Range 0-511
       :param int height: drawn bitmap height, in pixels. Range 0-511
 
+  .. method:: BitmapSizeH(width, height) 
+
+      Set the screen drawing of bitmaps for the current handle. high bits for large bitmaps
+
+      :param int width: high part of drawn bitmap width, in pixels. Range 0-3
+      :param int height: high part of drawn bitmap height, in pixels. Range 0-3
+
   .. method:: BitmapSource(addr) 
 
       Set the source address for bitmap graphics
@@ -317,10 +221,19 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
 
       Set the source for the r,g,b and a channels of a bitmap
 
-      :param int r: red component source channel. Range 0-7
-      :param int g: green component source channel. Range 0-7
-      :param int b: blue component source channel. Range 0-7
-      :param int a: alpha component source channel. Range 0-7
+      :param int r: red component source
+      :param int g: green component source
+      :param int b: blue component source
+      :param int a: alpha component source
+
+      The source parameter may be one of:
+
+      * :data:`ZERO` constant zero
+      * :data:`ONE` constant one
+      * :data:`RED` source bitmap red
+      * :data:`GREEN` source bitmap green
+      * :data:`BLUE` source bitmap blue
+      * :data:`ALPHA` source bitmap alpha
 
   .. method:: BitmapTransformA(p, v) 
 
@@ -391,6 +304,41 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
 
       These values are part of the graphics context and are saved and restored by :meth:`SaveContext` and :meth:`RestoreContext`.
 
+  .. method:: Cell(cell) 
+
+      Set the bitmap cell number used by :meth:`Vertex2f` when drawing ``BITMAPS``.
+
+      :param int cell: bitmap cell number. Range 0-127. The initial value is 0
+
+      This value is part of the graphics context and is saved and restored by :meth:`SaveContext` and :meth:`RestoreContext`.
+
+  .. method:: ClearColorA(alpha) 
+
+      Set clear value for the alpha channel
+
+      :param int alpha: alpha value used when the color buffer is cleared. Range 0-255. The initial value is 0
+
+      This value is part of the graphics context and is saved and restored by :meth:`SaveContext` and :meth:`RestoreContext`.
+
+  .. method:: ClearColorRGB(red, green, blue) 
+
+      Set clear values for red, green and blue channels
+
+      :param int red: red value used when the color buffer is cleared. Range 0-255. The initial value is 0
+      :param int green: green value used when the color buffer is cleared. Range 0-255. The initial value is 0
+      :param int blue: blue value used when the color buffer is cleared. Range 0-255. The initial value is 0
+
+      These values are part of the graphics context and are saved and restored by :meth:`SaveContext` and :meth:`RestoreContext`.
+
+  .. method:: Clear(c, s, t) 
+
+      Clear buffers to preset values
+
+      :param int c: clear color buffer. Range 0-1
+      :param int s: clear stencil buffer. Range 0-1
+      :param int t: clear tag buffer. Range 0-1
+
+
   .. method:: ClearStencil(s) 
 
       Set clear value for the stencil buffer
@@ -407,6 +355,15 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
 
       This value is part of the graphics context and is saved and restored by :meth:`SaveContext` and :meth:`RestoreContext`.
 
+  .. method:: ColorA(alpha) 
+
+      Set the current color alpha
+
+      :param int alpha: alpha for the current color. Range 0-255. The initial value is 255
+
+      This value is part of the graphics context and is saved and restored by :meth:`SaveContext` and :meth:`RestoreContext`.
+
+
   .. method:: ColorMask(r, g, b, a) 
 
       Enable and disable writing of frame buffer color components
@@ -418,9 +375,29 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
 
       These values are part of the graphics context and are saved and restored by :meth:`SaveContext` and :meth:`RestoreContext`.
 
-  .. method:: swap() 
+  .. method:: ColorRGB(red, green, blue) 
 
-      End the display list, dispatch it to the graphics hardware, start compiling the display list for the next frame.
+      Set the drawing color
+
+      :param int red: red value for the current color. Range 0-255. The initial value is 255
+      :param int green: green for the current color. Range 0-255. The initial value is 255
+      :param int blue: blue for the current color. Range 0-255. The initial value is 255
+
+      These values are part of the graphics context and are saved and restored by :meth:`SaveContext` and :meth:`RestoreContext`.
+
+  .. method:: End() 
+
+      End drawing a graphics primitive
+
+      :meth:`Vertex2ii` and :meth:`Vertex2f` calls are ignored until the next :meth:`Begin`.
+
+  .. method:: LineWidth(width) 
+
+      Set the width of rasterized lines
+
+      :param float width: line width in pixels. Range 0-511. The initial value is 1
+
+      This value is part of the graphics context and is saved and restored by :meth:`SaveContext` and :meth:`RestoreContext`.
 
   .. method:: Macro(m) 
 
@@ -437,6 +414,14 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
       Set the base address of the palette
 
       :param int addr: Address in graphics SRAM, 2-byte aligned. Range 0-4194303. The initial value is 0
+
+      This value is part of the graphics context and is saved and restored by :meth:`SaveContext` and :meth:`RestoreContext`.
+
+  .. method:: PointSize(size) 
+
+      Set the diameter of rasterized points
+
+      :param float size: point diameter in pixels. Range 0-1023. The initial value is 1
 
       This value is part of the graphics context and is saved and restored by :meth:`SaveContext` and :meth:`RestoreContext`.
 
@@ -486,6 +471,7 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
       This value is part of the graphics context and is saved and restored by :meth:`SaveContext` and :meth:`RestoreContext`.
 
   .. method:: StencilOp(sfail, spass) 
+
       Set stencil test actions
 
       :param int sfail: specifies the action to take when the stencil test fails, one of ``KEEP``, ``ZERO``, ``REPLACE``, ``INCR``, ``INCR_WRAP``, ``DECR``, ``DECR_WRAP``, and ``INVERT``. Range 0-7. The initial value is KEEP(1)
@@ -493,7 +479,9 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
 
       These values are part of the graphics context and are saved and restored by :meth:`SaveContext` and :meth:`RestoreContext`.
 
+
   .. method:: TagMask(mask) 
+
       Control the writing of the tag buffer
 
       :param int mask: allow updates to the tag buffer. Range 0-1. The initial value is 1
@@ -501,9 +489,36 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
       This value is part of the graphics context and is saved and restored by :meth:`SaveContext` and :meth:`RestoreContext`.
 
   .. method:: Tag(s) 
+
       Set the current tag value
 
       :param int s: tag value. Range 0-255. The initial value is 255
+
+      This value is part of the graphics context and is saved and restored by :meth:`SaveContext` and :meth:`RestoreContext`.
+
+  .. method:: Vertex2f(x, y) 
+
+      Draw a vertex.
+      This operation draws a graphics primitive, depending on the primitive set by :meth:`Begin`.
+
+      :param float x: pixel x-coordinate
+      :param float y: pixel y-coordinate
+
+  .. method:: Vertex2ii(x, y, handle, cell) 
+
+      :param int x: x-coordinate in pixels. Range 0-511
+      :param int y: y-coordinate in pixels. Range 0-511
+      :param int handle: bitmap handle. Range 0-31
+      :param int cell: cell number. Range 0-127
+
+      This method is an alternative to :meth:`BitmapHandle`, :meth:`Cell` and :meth:`Vertex2f`.
+
+
+  .. method:: VertexFormat(frac) 
+
+      Set the precision of coordinates used by :meth:`Vertex2f`
+
+      :param int frac: Number of fractional bits in X,Y coordinates. Range 0-7. The initial value is 4
 
       This value is part of the graphics context and is saved and restored by :meth:`SaveContext` and :meth:`RestoreContext`.
 
@@ -523,28 +538,24 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
 
       This value is part of the graphics context and is saved and restored by :meth:`SaveContext` and :meth:`RestoreContext`.
 
-  .. method:: VertexFormat(frac) 
+  .. method:: cc(b) 
 
-      Set the precision of coordinates used by :meth:`Vertex2f`
+      Append bytes to the command FIFO.
 
-      :param int frac: Number of fractional bits in X,Y coordinates. Range 0-7. The initial value is 4
-
-      This value is part of the graphics context and is saved and restored by :meth:`SaveContext` and :meth:`RestoreContext`.
-
-  .. method:: flush() 
-
-      Send any queued drawing commands directly to the hardware.
+      :param bytes b: The bytes to add. Its length must be a multiple of 4.
 
   .. method:: finish()
 
       Send any queued drawing commands directly to the hardware,
       and return when they have all cometed execution.
 
-  .. method:: cc(b) 
+  .. method:: flush() 
 
-      Append bytes to the command FIFO.
+      Send any queued drawing commands directly to the hardware.
 
-      :param bytes b: The bytes to add. Its length must be a multiple of 4.
+  .. method:: swap() 
+
+      End the display list, dispatch it to the graphics hardware, start compiling the display list for the next frame.
 
 
 Module constants
