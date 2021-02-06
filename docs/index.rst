@@ -959,19 +959,6 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
       :param y1 int: description
       :param argb1 int: description
 
-  .. method:: cmd_hammeraux()
-
-      Description
-
-
-  .. method:: cmd_hmac(src, num, hash)
-
-      Description
-
-      :param src int: description
-      :param num int: description
-      :param hash int: description
-
   .. method:: cmd_hsf(w)
 
       Description
@@ -985,19 +972,6 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
       :param ptr! int: description
 
   .. method:: cmd_inflate2(ptr, options!)
-
-      Description
-
-      :param ptr int: description
-      :param options! int: description
-
-  .. method:: cmd_int_ramshared(ptr)
-
-      Description
-
-      :param ptr int: description
-
-  .. method:: cmd_int_swloadimage(ptr, options!)
 
       Description
 
@@ -1021,12 +995,6 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
       :param font int: description
       :param options int: description
       :param s str: description
-
-  .. method:: cmd_linetime(dst)
-
-      Description
-
-      :param dst int: description
 
   .. method:: cmd_loadidentity()
 
@@ -1254,14 +1222,6 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
       Description
 
       :param handle int: description
-
-  .. method:: cmd_sha1(src, num, hash)
-
-      Description
-
-      :param src int: description
-      :param num int: description
-      :param hash int: description
 
   .. method:: cmd_sketch(x, y, w, h, ptr, format)
 
