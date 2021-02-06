@@ -973,19 +973,6 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
       :param y1 int: description
       :param argb1 int: description
 
-  .. method:: cmd_hammeraux()
-
-      Description
-
-
-  .. method:: cmd_hmac(src, num, hash)
-
-      Description
-
-      :param int src: description
-      :param int num: description
-      :param int hash: description
-
   .. method:: cmd_hsf(w)
 
       Description
@@ -999,19 +986,6 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
       :param ptr! int: description
 
   .. method:: cmd_inflate2(ptr, options!)
-
-      Description
-
-      :param int ptr: description
-      :param options! int: description
-
-  .. method:: cmd_int_ramshared(ptr)
-
-      Description
-
-      :param int ptr: description
-
-  .. method:: cmd_int_swloadimage(ptr, options!)
 
       Description
 
@@ -1037,12 +1011,6 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
       :param str s: description
 
       .. include:: gen/example-cmd_keys.rst
-
-  .. method:: cmd_linetime(dst)
-
-      Description
-
-      :param int dst: description
 
   .. method:: cmd_loadidentity()
 
@@ -1276,14 +1244,6 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
       Description
 
       :param int handle: description
-
-  .. method:: cmd_sha1(src, num, hash)
-
-      Description
-
-      :param int src: description
-      :param int num: description
-      :param int hash: description
 
   .. method:: cmd_sketch(x, y, w, h, ptr, format)
 
@@ -1582,17 +1542,26 @@ Bitmap Formats used by :meth:`BitmapLayout`
 .. data:: ASTC_12x12
   :value: 0x93BD  
 
+Filter types for :meth:`BitmapSize`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 .. data:: NEAREST
   :value: 0
 
 .. data:: BILINEAR
   :value: 1
 
+Wrap types for :meth:`BitmapSize`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 .. data:: BORDER
   :value: 0
 
 .. data:: REPEAT
   :value: 1
+
+Actions for :meth:`StencilFunc`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. data:: KEEP
   :value: 1
@@ -1608,6 +1577,9 @@ Bitmap Formats used by :meth:`BitmapLayout`
 
 .. data:: INVERT
   :value: 5
+
+Blend factors for :meth:`BlendFunc`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. data:: ZERO
   :value: 0
@@ -1626,6 +1598,9 @@ Bitmap Formats used by :meth:`BitmapLayout`
 
 .. data:: ONE_MINUS_DST_ALPHA
   :value: 5
+
+Primitive types for :meth:`Begin`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. data:: BITMAPS
   :value: 1
@@ -1653,6 +1628,9 @@ Bitmap Formats used by :meth:`BitmapLayout`
 
 .. data:: RECTS
   :value: 9
+
+Options bitfields
+^^^^^^^^^^^^^^^^^
 
 .. data:: OPT_MONO
   :value: 1
@@ -1708,6 +1686,9 @@ Bitmap Formats used by :meth:`BitmapLayout`
 .. data:: OPT_FILL
   :value: 8192    
 
+Sample formats for use with :data:`REG_PLAYBACK_FORMAT`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 .. data:: LINEAR_SAMPLES
   :value: 0
 
@@ -1716,6 +1697,9 @@ Bitmap Formats used by :meth:`BitmapLayout`
 
 .. data:: ADPCM_SAMPLES
   :value: 2
+
+Instrument names for use with :data:`REG_SOUND`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. data:: HARP
   :value: 0x40    
@@ -1779,6 +1763,9 @@ Bitmap Formats used by :meth:`BitmapLayout`
 
 .. data:: UNMUTE
   :value: 0x61
+
+Hardware register addresses
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. data:: RAM_CMD
   :value: 0x308000
