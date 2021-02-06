@@ -5,6 +5,8 @@ bteve documentation
    :maxdepth: 2
    :caption: Contents:
 
+.. highlight:: python
+
 ``bteve`` is a Python driver for BridgeTek's EVE series GPUs.
 In particular it supports the Gameduino 3X series of display devices.
 
@@ -399,6 +401,8 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
 
       This value is part of the graphics context and is saved and restored by :meth:`SaveContext` and :meth:`RestoreContext`.
 
+      .. include:: gen/example-LineWidth.rst
+
   .. method:: Macro(m) 
 
       Execute a single command from a macro register
@@ -561,68 +565,68 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
 
       Description
 
-      :param ch int: description
+      :param int ch: description
 
   .. method:: cmd_animframe(x, y, aoptr, frame)
 
       Description
 
-      :param x int: description
-      :param y int: description
-      :param aoptr int: description
-      :param frame int: description
+      :param int x: description
+      :param int y: description
+      :param int aoptr: description
+      :param int frame: description
 
   .. method:: cmd_animframeram(x, y, aoptr, frame)
 
       Description
 
-      :param x int: description
-      :param y int: description
-      :param aoptr int: description
-      :param frame int: description
+      :param int x: description
+      :param int y: description
+      :param int aoptr: description
+      :param int frame: description
 
   .. method:: cmd_animstart(ch, aoptr, loop)
 
       Description
 
-      :param ch int: description
-      :param aoptr int: description
-      :param loop int: description
+      :param int ch: description
+      :param int aoptr: description
+      :param int loop: description
 
   .. method:: cmd_animstartram(ch, aoptr, loop)
 
       Description
 
-      :param ch int: description
-      :param aoptr int: description
-      :param loop int: description
+      :param int ch: description
+      :param int aoptr: description
+      :param int loop: description
 
   .. method:: cmd_animstop(ch)
 
       Description
 
-      :param ch int: description
+      :param int ch: description
 
   .. method:: cmd_animxy(ch, x, y)
 
       Description
 
-      :param ch int: description
-      :param x int: description
-      :param y int: description
+      :param int ch: description
+      :param int x: description
+      :param int y: description
 
   .. method:: cmd_apilevel(level)
 
       Description
 
-      :param level int: description
+      :param int level: description
 
   .. method:: cmd_append(ptr, num)
 
       Append main memory to the current display list
 
-      :param ptr int: address in EVE memory, 32-bit aligned
-      :param num int: byte count, 32-bit aligned
+      :param int ptr: address in EVE memory, 32-bit aligned
+      :param int num: byte count, 32-bit aligned
 
       The ``append`` command
       executes ``num`` bytes of drawing commands from graphics memory at
@@ -633,14 +637,14 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
 
       Description
 
-      :param ptr int: description
-      :param num int: description
+      :param int ptr: description
+      :param int num: description
 
   .. method:: cmd_bgcolor(c)
 
       Sets the widget background color
 
-      :param c int: RGB color
+      :param int c: RGB color
 
   .. method:: cmd_bitmap_transform(x0, y0, x1, y1, x2, y2, tx0, ty0, tx1, ty1, tx2, ty2, result)
 
@@ -658,19 +662,19 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
       :param ty1 int: description
       :param tx2 int: description
       :param ty2 int: description
-      :param result int: description
+      :param int result: description
 
   .. method:: cmd_button(x, y, w, h, font, options, s)
 
       Draw a button with a text label
 
-      :param x int: button top left x
-      :param y int: button top left y
-      :param w int: button width in pixels
-      :param h int: button height in pixels
-      :param font int: font for label, 0-31
-      :param options int: rendering options, see below
-      :param s str: label text
+      :param int x: button top left x
+      :param int y: button top left y
+      :param int w: button width in pixels
+      :param int h: button height in pixels
+      :param int font: font for label, 0-31
+      :param int options: rendering options, see below
+      :param str s: label text
 
       The ``button`` command
       draws a button widget at screen (``x``, ``y``) with pixel size ``w`` x ``h``.
@@ -684,27 +688,29 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
       * :data:`OPT_FORMAT` use a printf-style format string
       * :data:`OPT_FILL` apply multi-line text fill, see :meth:`cmd_fillwidth`
 
+      .. include:: gen/example-cmd_button.rst
+
   .. method:: cmd_calibrate(result)
 
       Description
 
-      :param result int: description
+      :param int result: description
 
   .. method:: cmd_calibratesub(x, y, w, h, result)
 
       Description
 
-      :param x int: description
-      :param y int: description
-      :param w int: description
-      :param h int: description
-      :param result int: description
+      :param int x: description
+      :param int y: description
+      :param int w: description
+      :param int h: description
+      :param int result: description
 
   .. method:: cmd_calllist(a)
 
       Description
 
-      :param a int: description
+      :param int a: description
 
   .. method:: cmd_clearcache()
 
@@ -715,14 +721,14 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
 
       Description
 
-      :param x int: description
-      :param y int: description
-      :param r int: description
-      :param options int: description
-      :param h int: description
-      :param m int: description
-      :param s int: description
-      :param ms int: description
+      :param int x: description
+      :param int y: description
+      :param int r: description
+      :param int options: description
+      :param int h: description
+      :param int m: description
+      :param int s: description
+      :param int ms: description
 
       The following options may be logically-ored together:
 
@@ -731,6 +737,8 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
       * :data:`OPT_NOTICKS` do not draw tick marks
       * :data:`OPT_NOSECS` do not draw seconds hand
       * :data:`OPT_NOHM` do not draw hours and minutes hands
+
+      .. include:: gen/example-cmd_clock.rst
 
   .. method:: cmd_coldstart()
 
@@ -742,17 +750,19 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
       Compute a CRC-32 for the currently displayed image
       write it to 
 
-      :param ptr int: address in EVE memory
+      :param int ptr: address in EVE memory
 
   .. method:: cmd_dial(x, y, r, options, val)
 
-      Description
+      Draws a dial, a circular widget with a single mark
 
-      :param x int: description
-      :param y int: description
-      :param r int: description
-      :param options int: description
-      :param val int: description
+      :param int x: description
+      :param int y: description
+      :param int r: description
+      :param int options: description
+      :param int val: description
+
+      .. include:: gen/example-cmd_dial.rst
 
   .. method:: cmd_dlstart()
 
@@ -768,20 +778,20 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
 
       Description
 
-      :param ptr int: description
-      :param result int: description
+      :param int ptr: description
+      :param int result: description
 
   .. method:: cmd_fgcolor(c)
 
       Description
 
-      :param c int: description
+      :param int c: description
 
   .. method:: cmd_fillwidth(s)
 
       Description
 
-      :param s int: description
+      :param int s: description
 
   .. method:: cmd_flashattach()
 
@@ -802,29 +812,29 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
 
       Description
 
-      :param result int: description
+      :param int result: description
 
   .. method:: cmd_flashprogram(dest, src, num)
 
       Description
 
-      :param dest int: description
-      :param src int: description
-      :param num int: description
+      :param int dest: description
+      :param int src: description
+      :param int num: description
 
   .. method:: cmd_flashread(dest, src, num)
 
       Description
 
-      :param dest int: description
-      :param src int: description
-      :param num int: description
+      :param int dest: description
+      :param int src: description
+      :param int num: description
 
   .. method:: cmd_flashsource(ptr)
 
       Description
 
-      :param ptr int: description
+      :param int ptr: description
 
   .. method:: cmd_flashspidesel()
 
@@ -835,8 +845,8 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
 
       Description
 
-      :param ptr int: description
-      :param num int: description
+      :param int ptr: description
+      :param int num: description
 
   .. method:: cmd_flashspitx(num!)
 
@@ -848,94 +858,96 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
 
       Description
 
-      :param dest int: description
-      :param src int: description
-      :param num int: description
+      :param int dest: description
+      :param int src: description
+      :param int num: description
 
   .. method:: cmd_flashwrite(ptr, num!)
 
       Description
 
-      :param ptr int: description
+      :param int ptr: description
       :param num! int: description
 
   .. method:: cmd_fontcache(font, ptr, num)
 
       Description
 
-      :param font int: description
-      :param ptr int: description
-      :param num int: description
+      :param int font: description
+      :param int ptr: description
+      :param int num: description
 
   .. method:: cmd_fontcachequery(total, used)
 
       Description
 
-      :param total int: description
-      :param used int: description
+      :param int total: description
+      :param int used: description
 
   .. method:: cmd_gauge(x, y, r, options, major, minor, val, range)
 
       Description
 
-      :param x int: description
-      :param y int: description
-      :param r int: description
-      :param options int: description
-      :param major int: description
-      :param minor int: description
-      :param val int: description
-      :param range int: description
+      :param int x: description
+      :param int y: description
+      :param int r: description
+      :param int options: description
+      :param int major: description
+      :param int minor: description
+      :param int val: description
+      :param int range: description
+
+      .. include:: gen/example-cmd_gauge.rst
 
   .. method:: cmd_getimage(source, fmt, w, h, palette)
 
       Description
 
-      :param source int: description
-      :param fmt int: description
-      :param w int: description
-      :param h int: description
-      :param palette int: description
+      :param int source: description
+      :param int fmt: description
+      :param int w: description
+      :param int h: description
+      :param int palette: description
 
   .. method:: cmd_getmatrix(a, b, c, d, e, f)
 
       Description
 
-      :param a int: description
-      :param b int: description
-      :param c int: description
-      :param d int: description
-      :param e int: description
-      :param f int: description
+      :param int a: description
+      :param int b: description
+      :param int c: description
+      :param int d: description
+      :param int e: description
+      :param int f: description
 
   .. method:: cmd_getpoint(x, y, sx, sy)
 
       Description
 
-      :param x int: description
-      :param y int: description
-      :param sx int: description
-      :param sy int: description
+      :param int x: description
+      :param int y: description
+      :param int sx: description
+      :param int sy: description
 
   .. method:: cmd_getprops(ptr, w, h)
 
       Description
 
-      :param ptr int: description
-      :param w int: description
-      :param h int: description
+      :param int ptr: description
+      :param int w: description
+      :param int h: description
 
   .. method:: cmd_getptr(result)
 
       Description
 
-      :param result int: description
+      :param int result: description
 
   .. method:: cmd_gradcolor(c)
 
       Description
 
-      :param c int: description
+      :param int c: description
 
   .. method:: cmd_gradient(x0, y0, rgb0, x1, y1, rgb1)
 
@@ -947,6 +959,8 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
       :param x1 int: description
       :param y1 int: description
       :param rgb1 int: description
+
+      .. include:: gen/example-cmd_gradient.rst
 
   .. method:: cmd_gradienta(x0, y0, argb0, x1, y1, argb1)
 
@@ -968,15 +982,15 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
 
       Description
 
-      :param src int: description
-      :param num int: description
-      :param hash int: description
+      :param int src: description
+      :param int num: description
+      :param int hash: description
 
   .. method:: cmd_hsf(w)
 
       Description
 
-      :param w int: description
+      :param int w: description
 
   .. method:: cmd_inflate(ptr!)
 
@@ -988,45 +1002,47 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
 
       Description
 
-      :param ptr int: description
+      :param int ptr: description
       :param options! int: description
 
   .. method:: cmd_int_ramshared(ptr)
 
       Description
 
-      :param ptr int: description
+      :param int ptr: description
 
   .. method:: cmd_int_swloadimage(ptr, options!)
 
       Description
 
-      :param ptr int: description
+      :param int ptr: description
       :param options! int: description
 
   .. method:: cmd_interrupt(ms)
 
       Description
 
-      :param ms int: description
+      :param int ms: description
 
   .. method:: cmd_keys(x, y, w, h, font, options, s)
 
       Description
 
-      :param x int: description
-      :param y int: description
-      :param w int: description
-      :param h int: description
-      :param font int: description
-      :param options int: description
-      :param s str: description
+      :param int x: description
+      :param int y: description
+      :param int w: description
+      :param int h: description
+      :param int font: description
+      :param int options: description
+      :param str s: description
+
+      .. include:: gen/example-cmd_keys.rst
 
   .. method:: cmd_linetime(dst)
 
       Description
 
-      :param dst int: description
+      :param int dst: description
 
   .. method:: cmd_loadidentity()
 
@@ -1037,7 +1053,7 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
 
       Description
 
-      :param ptr int: description
+      :param int ptr: description
       :param options! int: description
 
   .. method:: cmd_logo()
@@ -1049,52 +1065,52 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
 
       Description
 
-      :param ptr int: description
-      :param size int: description
+      :param int ptr: description
+      :param int size: description
 
   .. method:: cmd_memcpy(dest, src, num)
 
       Description
 
-      :param dest int: description
-      :param src int: description
-      :param num int: description
+      :param int dest: description
+      :param int src: description
+      :param int num: description
 
   .. method:: cmd_memcrc(ptr, num, result)
 
       Description
 
-      :param ptr int: description
-      :param num int: description
-      :param result int: description
+      :param int ptr: description
+      :param int num: description
+      :param int result: description
 
   .. method:: cmd_memset(ptr, value, num)
 
       Description
 
-      :param ptr int: description
-      :param value int: description
-      :param num int: description
+      :param int ptr: description
+      :param int value: description
+      :param int num: description
 
   .. method:: cmd_memwrite(ptr, num!)
 
       Description
 
-      :param ptr int: description
+      :param int ptr: description
       :param num! int: description
 
   .. method:: cmd_memzero(ptr, num)
 
       Description
 
-      :param ptr int: description
-      :param num int: description
+      :param int ptr: description
+      :param int num: description
 
   .. method:: cmd_newlist(a)
 
       Description
 
-      :param a int: description
+      :param int a: description
 
   .. method:: cmd_nop()
 
@@ -1105,19 +1121,21 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
 
       Description
 
-      :param x int: description
-      :param y int: description
-      :param font int: description
-      :param options int: description
-      :param n int: description
+      :param int x: description
+      :param int y: description
+      :param int font: description
+      :param int options: description
+      :param int n: description
+
+      .. include:: gen/example-cmd_number.rst
 
   .. method:: cmd_pclkfreq(ftarget, rounding, factual)
 
       Description
 
-      :param ftarget int: description
-      :param rounding int: description
-      :param factual int: description
+      :param int ftarget: description
+      :param int rounding: description
+      :param int factual: description
 
   .. method:: cmd_playvideo(options!)
 
@@ -1129,20 +1147,22 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
 
       Description
 
-      :param x int: description
-      :param y int: description
-      :param w int: description
-      :param h int: description
-      :param options int: description
-      :param val int: description
-      :param range int: description
+      :param int x: description
+      :param int y: description
+      :param int w: description
+      :param int h: description
+      :param int options: description
+      :param int val: description
+      :param int range: description
+
+      .. include:: gen/example-cmd_progress.rst
 
   .. method:: cmd_regread(ptr, result)
 
       Description
 
-      :param ptr int: description
-      :param result int: description
+      :param int ptr: description
+      :param int result: description
 
   .. method:: cmd_resetfonts()
 
@@ -1158,37 +1178,37 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
 
       Description
 
-      :param font int: description
-      :param romslot int: description
+      :param int font: description
+      :param int romslot: description
 
   .. method:: cmd_rotate(a)
 
       Description
 
-      :param a int: description
+      :param int a: description
 
   .. method:: cmd_rotatearound(x, y, a, s)
 
       Description
 
-      :param x int: description
-      :param y int: description
-      :param a int: description
-      :param s int: description
+      :param int x: description
+      :param int y: description
+      :param int a: description
+      :param int s: description
 
   .. method:: cmd_runanim(waitmask, play)
 
       Description
 
-      :param waitmask int: description
-      :param play int: description
+      :param int waitmask: description
+      :param int play: description
 
   .. method:: cmd_scale(sx, sy)
 
       Description
 
-      :param sx int: description
-      :param sy int: description
+      :param int sx: description
+      :param int sy: description
 
   .. method:: cmd_screensaver()
 
@@ -1199,44 +1219,46 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
 
       Description
 
-      :param x int: description
-      :param y int: description
-      :param w int: description
-      :param h int: description
-      :param options int: description
-      :param val int: description
-      :param size int: description
-      :param range int: description
+      :param int x: description
+      :param int y: description
+      :param int w: description
+      :param int h: description
+      :param int options: description
+      :param int val: description
+      :param int size: description
+      :param int range: description
+
+      .. include:: gen/example-cmd_scrollbar.rst
 
   .. method:: cmd_setbase(b)
 
       Description
 
-      :param b int: description
+      :param int b: description
 
   .. method:: cmd_setbitmap(source, fmt, w, h)
 
       Description
 
-      :param source int: description
-      :param fmt int: description
-      :param w int: description
-      :param h int: description
+      :param int source: description
+      :param int fmt: description
+      :param int w: description
+      :param int h: description
 
   .. method:: cmd_setfont(font, ptr)
 
       Description
 
-      :param font int: description
-      :param ptr int: description
+      :param int font: description
+      :param int ptr: description
 
   .. method:: cmd_setfont2(font, ptr, firstchar)
 
       Description
 
-      :param font int: description
-      :param ptr int: description
-      :param firstchar int: description
+      :param int font: description
+      :param int ptr: description
+      :param int firstchar: description
 
   .. method:: cmd_setmatrix()
 
@@ -1247,70 +1269,74 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
 
       Description
 
-      :param r int: description
+      :param int r: description
 
   .. method:: cmd_setscratch(handle)
 
       Description
 
-      :param handle int: description
+      :param int handle: description
 
   .. method:: cmd_sha1(src, num, hash)
 
       Description
 
-      :param src int: description
-      :param num int: description
-      :param hash int: description
+      :param int src: description
+      :param int num: description
+      :param int hash: description
 
   .. method:: cmd_sketch(x, y, w, h, ptr, format)
 
       Description
 
-      :param x int: description
-      :param y int: description
-      :param w int: description
-      :param h int: description
-      :param ptr int: description
-      :param format int: description
+      :param int x: description
+      :param int y: description
+      :param int w: description
+      :param int h: description
+      :param int ptr: description
+      :param int format: description
 
   .. method:: cmd_slider(x, y, w, h, options, val, range)
 
       Description
 
-      :param x int: description
-      :param y int: description
-      :param w int: description
-      :param h int: description
-      :param options int: description
-      :param val int: description
-      :param range int: description
+      :param int x: description
+      :param int y: description
+      :param int w: description
+      :param int h: description
+      :param int options: description
+      :param int val: description
+      :param int range: description
+
+      .. include:: gen/example-cmd_slider.rst
 
   .. method:: cmd_snapshot(ptr)
 
       Description
 
-      :param ptr int: description
+      :param int ptr: description
 
   .. method:: cmd_snapshot2(fmt, ptr, x, y, w, h)
 
       Description
 
-      :param fmt int: description
-      :param ptr int: description
-      :param x int: description
-      :param y int: description
-      :param w int: description
-      :param h int: description
+      :param int fmt: description
+      :param int ptr: description
+      :param int x: description
+      :param int y: description
+      :param int w: description
+      :param int h: description
 
   .. method:: cmd_spinner(x, y, style, scale)
 
       Description
 
-      :param x int: description
-      :param y int: description
-      :param style int: description
-      :param scale int: description
+      :param int x: description
+      :param int y: description
+      :param int style: description
+      :param int scale: description
+
+      .. include:: gen/example-cmd_spinner.rst
 
   .. method:: cmd_stop()
 
@@ -1336,23 +1362,25 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
 
       Description
 
-      :param x int: description
-      :param y int: description
-      :param font int: description
-      :param options int: description
-      :param s str: description
+      :param int x: description
+      :param int y: description
+      :param int font: description
+      :param int options: description
+      :param str s: description
 
   .. method:: cmd_toggle(x, y, w, font, options, state, s)
 
       Description
 
-      :param x int: description
-      :param y int: description
-      :param w int: description
-      :param font int: description
-      :param options int: description
-      :param state int: description
-      :param s str: description
+      :param int x: description
+      :param int y: description
+      :param int w: description
+      :param int font: description
+      :param int options: description
+      :param int state: description
+      :param str s: description
+
+      .. include:: gen/example-cmd_toggle.rst
 
   .. method:: cmd_touch_transform(x0, y0, x1, y1, x2, y2, tx0, ty0, tx1, ty1, tx2, ty2, result)
 
@@ -1370,31 +1398,31 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
       :param ty1 int: description
       :param tx2 int: description
       :param ty2 int: description
-      :param result int: description
+      :param int result: description
 
   .. method:: cmd_track(x, y, w, h, tag)
 
       Description
 
-      :param x int: description
-      :param y int: description
-      :param w int: description
-      :param h int: description
-      :param tag int: description
+      :param int x: description
+      :param int y: description
+      :param int w: description
+      :param int h: description
+      :param int tag: description
 
   .. method:: cmd_translate(tx, ty)
 
       Description
 
-      :param tx int: description
-      :param ty int: description
+      :param int tx: description
+      :param int ty: description
 
   .. method:: cmd_videoframe(dst, ptr)
 
       Description
 
-      :param dst int: description
-      :param ptr int: description
+      :param int dst: description
+      :param int ptr: description
 
   .. method:: cmd_videostart()
 
@@ -1410,7 +1438,7 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
 
       Description
 
-      :param us int: description
+      :param int us: description
 
 
 Module constants
