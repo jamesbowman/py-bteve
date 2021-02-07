@@ -12,7 +12,7 @@ Examples
         gd.cmd_text(240, 196, 31, eve.OPT_CENTER, "WHITE AGAIN")
         
         
-.. image:: /gen/images/0018.png
+.. image:: /gen/images/0017.png
 
 |
 

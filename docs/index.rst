@@ -15,6 +15,10 @@ It supports:
 * Python running on a PC, connected via a `SPIDriver <https://spidriver.com>`_ to the Gameduino or BT81x
 * CircuitPython on an embedded board, including Adafruit M4 boards, Teensy 4.x, and Raspberry Pi Pico
 
+.. literalinclude:: ../examples/helloworld.py
+
+.. image:: /images/helloworld.png
+
 Module classes
 --------------
 
@@ -28,9 +32,13 @@ Module classes
       Calls method :meth:`coldstart`.
       Confirm that it is running.
 
-  .. method:: coldstart()
+  .. data:: w
 
-      Restarts the EVE core.
+      Width of the display, in pixels. Available after calling :meth:`init`.
+
+  .. data:: h
+
+      Height of the display, in pixels. Available after calling :meth:`init`.
 
   .. method:: rd(a, n)
 
@@ -51,7 +59,7 @@ Module classes
 
       Read a 32-bit value from EVE memory
       :param int a: address in EVE memory
-      :return int: memory contents
+      :returns int: memory contents
 
   .. method:: wr32(a, v)
 
@@ -64,14 +72,14 @@ Module classes
 
       Returns True if the EVE command FIFO is empty
 
-      :return bool: True if the EVE command FIFO is empty
+      :returns bool: True if the EVE command FIFO is empty
 
       This method is the non-blocking equivalent of
       :meth:`EVE.finish`.
 
   .. method:: result(n = 1)
 
-The class :class:`EVE` contains all the methods for acting on the EVE hardware.
+|
 
 .. class:: EVE
 
@@ -166,6 +174,8 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
       :param int prim: graphics primitive.
 
       Valid primitives are :data:`BITMAPS`, ``POINTS``, ``LINES``, ``LINE_STRIP``, ``EDGE_STRIP_R``, ``EDGE_STRIP_L``, ``EDGE_STRIP_A``, ``EDGE_STRIP_B`` and ``RECTS``.
+
+      .. include:: gen/example-Begin.rst
 
   .. method:: BitmapExtFormat(format) 
 
@@ -306,6 +316,8 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
 
       These values are part of the graphics context and are saved and restored by :meth:`SaveContext` and :meth:`RestoreContext`.
 
+      .. include:: gen/example-BlendFunc.rst
+
   .. method:: Cell(cell) 
 
       Set the bitmap cell number used by :meth:`Vertex2f` when drawing ``BITMAPS``.
@@ -313,6 +325,8 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
       :param int cell: bitmap cell number. Range 0-127. The initial value is 0
 
       This value is part of the graphics context and is saved and restored by :meth:`SaveContext` and :meth:`RestoreContext`.
+
+      .. include:: gen/example-Cell.rst
 
   .. method:: ClearColorA(alpha) 
 
@@ -332,7 +346,9 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
 
       These values are part of the graphics context and are saved and restored by :meth:`SaveContext` and :meth:`RestoreContext`.
 
-  .. method:: Clear(c, s, t) 
+      .. include:: gen/example-ClearColorRGB.rst
+
+  .. method:: Clear(c = 1, s = 1, t = 1) 
 
       Clear buffers to preset values
 
@@ -340,6 +356,7 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
       :param int s: clear stencil buffer. Range 0-1
       :param int t: clear tag buffer. Range 0-1
 
+      .. include:: gen/example-Clear.rst
 
   .. method:: ClearStencil(s) 
 
@@ -365,6 +382,7 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
 
       This value is part of the graphics context and is saved and restored by :meth:`SaveContext` and :meth:`RestoreContext`.
 
+      .. include:: gen/example-ColorA.rst
 
   .. method:: ColorMask(r, g, b, a) 
 
@@ -377,6 +395,8 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
 
       These values are part of the graphics context and are saved and restored by :meth:`SaveContext` and :meth:`RestoreContext`.
 
+      .. include:: gen/example-ColorMask.rst
+
   .. method:: ColorRGB(red, green, blue) 
 
       Set the drawing color
@@ -386,6 +406,8 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
       :param int blue: blue for the current color. Range 0-255. The initial value is 255
 
       These values are part of the graphics context and are saved and restored by :meth:`SaveContext` and :meth:`RestoreContext`.
+
+      .. include:: gen/example-ColorRGB.rst
 
   .. method:: End() 
 
@@ -429,6 +451,8 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
 
       This value is part of the graphics context and is saved and restored by :meth:`SaveContext` and :meth:`RestoreContext`.
 
+      .. include:: gen/example-PointSize.rst
+
   .. method:: RestoreContext() 
 
       Restore the current graphics context from the context stack
@@ -438,6 +462,8 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
       Push the current graphics context on the context stack.
       The hardware's graphics context stack is 4 levels deep.
 
+      .. include:: gen/example-SaveContext.rst
+
   .. method:: ScissorSize(width, height) 
 
       Set the size of the scissor clip rectangle
@@ -446,6 +472,8 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
       :param int height: The height of the scissor clip rectangle, in pixels. Range 0-4095. The initial value is 2048
 
       These values are part of the graphics context and are saved and restored by :meth:`SaveContext` and :meth:`RestoreContext`.
+
+      .. include:: gen/example-ScissorSize.rst
 
   .. method:: ScissorXY(x, y) 
 
@@ -483,6 +511,7 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
 
       These values are part of the graphics context and are saved and restored by :meth:`SaveContext` and :meth:`RestoreContext`.
 
+      .. include:: gen/example-StencilOp.rst
 
   .. method:: TagMask(mask) 
 
@@ -563,63 +592,67 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
 
   .. method:: cmd_animdraw(ch)
 
-      Description
+      Draw an animation
 
-      :param int ch: description
+      :param int ch: animation channel
 
   .. method:: cmd_animframe(x, y, aoptr, frame)
 
-      Description
+      Draw one animation frame
 
-      :param int x: description
-      :param int y: description
-      :param int aoptr: description
+      :param int x: x-coordinate
+      :param int y: y-coordinate
+      :param int aoptr: animation object pointer
       :param int frame: description
 
   .. method:: cmd_animframeram(x, y, aoptr, frame)
 
-      Description
+      Draw one animation frame from RAM
 
-      :param int x: description
-      :param int y: description
-      :param int aoptr: description
+      :param int x: x-coordinate
+      :param int y: y-coordinate
+      :param int aoptr: animation object pointer
       :param int frame: description
 
   .. method:: cmd_animstart(ch, aoptr, loop)
 
-      Description
+      Start an animation
 
-      :param int ch: description
-      :param int aoptr: description
+      :param int ch: animation channel
+      :param int aoptr: animation object pointer
       :param int loop: description
 
   .. method:: cmd_animstartram(ch, aoptr, loop)
 
-      Description
+      Start an animation from RAM
 
-      :param int ch: description
-      :param int aoptr: description
+      :param int ch: animation channel
+      :param int aoptr: animation object pointer
       :param int loop: description
 
   .. method:: cmd_animstop(ch)
 
-      Description
+      Stop playing an animation
 
-      :param int ch: description
+      :param int ch: animation channel
 
   .. method:: cmd_animxy(ch, x, y)
 
-      Description
+      Play an animation
 
-      :param int ch: description
-      :param int x: description
-      :param int y: description
+      :param int ch: animation channel
+      :param int x: x-coordinate
+      :param int y: y-coordinate
 
   .. method:: cmd_apilevel(level)
 
-      Description
+      Set the API level
 
-      :param int level: description
+      :param int level: API level, 0 or 1.
+
+      API levelel. 0 is strict BT815 compatible, 1 is BT817.
+
+      .. note:: 817 only
 
   .. method:: cmd_append(ptr, num)
 
@@ -635,7 +668,7 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
 
   .. method:: cmd_appendf(ptr, num)
 
-      Description
+      Append from flash to the current display list
 
       :param int ptr: description
       :param int num: description
@@ -648,21 +681,21 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
 
   .. method:: cmd_bitmap_transform(x0, y0, x1, y1, x2, y2, tx0, ty0, tx1, ty1, tx2, ty2, result)
 
-      Description
+      Computes an arbitrary bitmap transform
 
-      :param x0 int: description
-      :param y0 int: description
-      :param x1 int: description
-      :param y1 int: description
-      :param x2 int: description
-      :param y2 int: description
-      :param tx0 int: description
-      :param ty0 int: description
-      :param tx1 int: description
-      :param ty1 int: description
-      :param tx2 int: description
-      :param ty2 int: description
-      :param int result: description
+      :param x0 int:  point 0 screen x-coordinate
+      :param y0 int:  point 0 screen y-coordinate
+      :param x1 int:  point 1 screen x-coordinate
+      :param y1 int:  point 1 screen y-coordinate
+      :param x2 int:  point 2 screen x-coordinate
+      :param y2 int:  point 2 screen y-coordinate
+      :param tx0 int: point 0 bitmap x-coordinate
+      :param ty0 int: point 0 bitmap y-coordinate
+      :param tx1 int: point 1 bitmap x-coordinate
+      :param ty1 int: point 1 bitmap y-coordinate
+      :param tx2 int: point 2 bitmap x-coordinate
+      :param ty2 int: point 2 bitmap y-coordinate
+      :param int result: return code. Set to -1 on success.
 
   .. method:: cmd_button(x, y, w, h, font, options, s)
 
@@ -692,40 +725,43 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
 
   .. method:: cmd_calibrate(result)
 
-      Description
+      Start the touch-screen calibration process
 
-      :param int result: description
+      :param int result: result code. Set to -1 on success.
 
   .. method:: cmd_calibratesub(x, y, w, h, result)
 
-      Description
+      Start the touch-screen calibration process
 
-      :param int x: description
-      :param int y: description
-      :param int w: description
-      :param int h: description
-      :param int result: description
+      :param int x: x-coordinate
+      :param int y: y-coordinate
+      :param int w: width
+      :param int h: height
+      :param int result: result code. Set to -1 on success.
+
+      .. note:: 817 only
 
   .. method:: cmd_calllist(a)
 
-      Description
+      Invoke a call list
 
-      :param int a: description
+      :param int a: call list pointer
+
+      .. note:: 817 only
 
   .. method:: cmd_clearcache()
 
-      Description
-
+      Clear the bitmap cache
 
   .. method:: cmd_clock(x, y, r, options, h, m, s, ms)
 
-      Description
+      Draw a clock
 
-      :param int x: description
-      :param int y: description
+      :param int x: x-coordinate
+      :param int y: y-coordinate
       :param int r: description
-      :param int options: description
-      :param int h: description
+      :param int options: see below
+      :param int h: height
       :param int m: description
       :param int s: description
       :param int ms: description
@@ -742,8 +778,7 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
 
   .. method:: cmd_coldstart()
 
-      Description
-
+      Reset all coprocessor state to its default values
 
   .. method:: cmd_crc(ptr)
 
@@ -756,650 +791,720 @@ The class :class:`EVE` contains all the methods for acting on the EVE hardware.
 
       Draws a dial, a circular widget with a single mark
 
-      :param int x: description
-      :param int y: description
+      :param int x: x-coordinate
+      :param int y: y-coordinate
       :param int r: description
-      :param int options: description
+      :param int options: see below
       :param int val: description
+
+      The following options may be logically-ored together:
+
+      * :data:`OPT_FLAT` render the element without 3D decorations
 
       .. include:: gen/example-cmd_dial.rst
 
   .. method:: cmd_dlstart()
 
-      Description
-
+      Low-level command to start a new display list
 
   .. method:: cmd_endlist()
 
-      Description
+      End a call list
 
-
-  .. method:: cmd_execute(ptr, result)
-
-      Description
-
-      :param int ptr: description
-      :param int result: description
+      .. note:: 817 only
 
   .. method:: cmd_fgcolor(c)
 
-      Description
+      Set the widget foreground color
 
-      :param int c: description
+      :param int c: 24-bit color
 
   .. method:: cmd_fillwidth(s)
 
-      Description
+      Set the fill width used for multi-line text widgets
 
-      :param int s: description
+      :param int s: fill width in pixels
 
   .. method:: cmd_flashattach()
 
-      Description
-
+      Attach to the flash
 
   .. method:: cmd_flashdetach()
 
-      Description
-
+      Detach from flash
 
   .. method:: cmd_flasherase()
 
-      Description
-
+      Perform a full-chip erase on the flash
 
   .. method:: cmd_flashfast(result)
 
-      Description
+      Enter fast mode
 
-      :param int result: description
+      :param int result: result code. 0 on success.
 
   .. method:: cmd_flashprogram(dest, src, num)
 
-      Description
+      Program flash from EVE memory
 
-      :param int dest: description
-      :param int src: description
-      :param int num: description
+      :param int dest: destination address in flash memory
+      :param int src: source address in EVE memory
+      :param int num: number of bytes to program
 
   .. method:: cmd_flashread(dest, src, num)
 
-      Description
+      Read from flash
 
-      :param int dest: description
-      :param int src: description
-      :param int num: description
+      :param int dest: destination address in EVE memory
+      :param int src: source address in flash memory
+      :param int num: number of bytes to read
 
   .. method:: cmd_flashsource(ptr)
 
-      Description
+      Set the flash source address for :meth:`cmd_videostartf`.
 
-      :param int ptr: description
+      :param int ptr: source address in flash memory
 
   .. method:: cmd_flashspidesel()
 
-      Description
-
+      Deselect the flash
 
   .. method:: cmd_flashspirx(ptr, num)
 
-      Description
+      Perform a raw SPI read from flash
 
-      :param int ptr: description
-      :param int num: description
+      :param int ptr: destination address in EVE memory
+      :param int num: number of bytes to read
 
   .. method:: cmd_flashspitx(num!)
 
-      Description
+      Perform a raw SPI write to flash
 
-      :param num! int: description
+      :param num int: number of bytes to write
+
+      This command is followed by the ``num`` bytes of inline data.
 
   .. method:: cmd_flashupdate(dest, src, num)
 
-      Description
+      Program flash from EVE memory
 
-      :param int dest: description
-      :param int src: description
-      :param int num: description
+      :param int dest: destination address in flash memory
+      :param int src: source address in EVE memory
+      :param int num: number of bytes to program
 
-  .. method:: cmd_flashwrite(ptr, num!)
+  .. method:: cmd_flashwrite(ptr, num)
 
-      Description
+      Program flash from inline data
 
-      :param int ptr: description
-      :param num! int: description
+      :param int ptr: destination address in flash memory
+      :param num int: number of bytes to program
+
+      This command is followed by the ``num`` bytes of inline data.
 
   .. method:: cmd_fontcache(font, ptr, num)
 
-      Description
+      Set up a font cache
 
-      :param int font: description
-      :param int ptr: description
-      :param int num: description
+      :param int font: font number 0-31
+      :param int ptr: start of font cache area
+      :param int num: number of bytes to use for font cache
+
+      .. note:: 817 only
 
   .. method:: cmd_fontcachequery(total, used)
 
-      Description
+      Return statistics on font cache usage
 
-      :param int total: description
-      :param int used: description
+      :param int total:  Total number of available bitmaps in the cache
+      :param int used: Number of used bitmaps in the cache
 
   .. method:: cmd_gauge(x, y, r, options, major, minor, val, range)
 
-      Description
+      Draw an indicator gauge
 
-      :param int x: description
-      :param int y: description
-      :param int r: description
-      :param int options: description
-      :param int major: description
-      :param int minor: description
-      :param int val: description
-      :param int range: description
+      :param int x: x-coordinate
+      :param int y: y-coordinate
+      :param int r: radius
+      :param int options: see below
+      :param int major: number of major tick marks
+      :param int minor: number of minor tick marks
+      :param int val: gauge value
+      :param int range: range of gauge
 
       .. include:: gen/example-cmd_gauge.rst
 
   .. method:: cmd_getimage(source, fmt, w, h, palette)
 
-      Description
+       Returns all the attributes of the bitmap made by the previous
+       :meth:`cmd_loadimage`,
+       :meth:`cmd_playvideo`,
+       :meth:`cmd_videostart` or
+       :meth:`cmd_videostartf`.
 
       :param int source: description
       :param int fmt: description
-      :param int w: description
-      :param int h: description
+      :param int w: width
+      :param int h: height
       :param int palette: description
 
   .. method:: cmd_getmatrix(a, b, c, d, e, f)
 
-      Description
+      Returns the current bitmap transform matrix
 
-      :param int a: description
-      :param int b: description
-      :param int c: description
-      :param int d: description
-      :param int e: description
-      :param int f: description
+      :param int a: matrix coefficient
+      :param int b: matrix coefficient
+      :param int c: matrix coefficient
+      :param int d: matrix coefficient
+      :param int e: matrix coefficient
+      :param int f: matrix coefficient
 
-  .. method:: cmd_getpoint(x, y, sx, sy)
+      The matrix is returned as:
 
-      Description
-
-      :param int x: description
-      :param int y: description
-      :param int sx: description
-      :param int sy: description
+         \begin{bmatrix}
+         a & b & c \\
+         d & e & f \\
+         \end{bmatrix}
 
   .. method:: cmd_getprops(ptr, w, h)
 
-      Description
+      Returns the parameters of the last loaded image
 
-      :param int ptr: description
-      :param int w: description
-      :param int h: description
+      :param int ptr: bitmap source address
+      :param int w: width
+      :param int h: height
 
   .. method:: cmd_getptr(result)
 
-      Description
+      Returns the first unallocated memory location
 
-      :param int result: description
+      :param int result: first unused address in EVE memory
 
   .. method:: cmd_gradcolor(c)
 
-      Description
+      set the 3D widget highlight color
 
-      :param int c: description
+      :param int c: a 24-bit color
 
   .. method:: cmd_gradient(x0, y0, rgb0, x1, y1, rgb1)
 
-      Description
+      Draw a smooth color gradient between two points
 
-      :param x0 int: description
-      :param y0 int: description
-      :param rgb0 int: description
-      :param x1 int: description
-      :param y1 int: description
-      :param rgb1 int: description
+      :param x0 int: point 0 x-coordinate
+      :param y0 int: point 0 y-coordinate
+      :param rgb0 int: a 24-bit color for point 0
+      :param x1 int: point 1 x-coordinate
+      :param y1 int: point 1 y-coordinate
+      :param rgb1 int: a 24-bit color for point 1
 
       .. include:: gen/example-cmd_gradient.rst
 
   .. method:: cmd_gradienta(x0, y0, argb0, x1, y1, argb1)
 
-      Description
+      Draw a smooth color gradient between two points with alpha transparency
 
-      :param x0 int: description
-      :param y0 int: description
-      :param argb0 int: description
-      :param x1 int: description
-      :param y1 int: description
-      :param argb1 int: description
+      :param x0 int: point 0 x-coordinate
+      :param y0 int: point 0 y-coordinate
+      :param argb0 int: a 32-bit color for point 0
+      :param x1 int: point 1 x-coordinate
+      :param y1 int: point 1 y-coordinate
+      :param argb1 int: a 32-bit color for point 1
 
   .. method:: cmd_hsf(w)
 
-      Description
+      Configure the horizontal scanout filter
 
-      :param int w: description
+      :param int w: width in pixels
 
-  .. method:: cmd_inflate(ptr!)
+      .. note:: 817 only
 
-      Description
+  .. method:: cmd_inflate(ptr)
 
-      :param ptr! int: description
+      Decompress data into EVE memory
+
+      :param ptr int: destination pointer in EVE memory
 
   .. method:: cmd_inflate2(ptr, options!)
 
-      Description
+      Decompress data into EVE memory
 
-      :param int ptr: description
-      :param options! int: description
+      :param int ptr: destination pointer in EVE memory
+      :param options! int: options
 
   .. method:: cmd_interrupt(ms)
 
-      Description
+      Trigger an interrupt
 
-      :param int ms: description
+      :param int ms: delay before triggering interrupt in milliseconds
 
   .. method:: cmd_keys(x, y, w, h, font, options, s)
 
-      Description
+      Draw a row of keys
 
-      :param int x: description
-      :param int y: description
-      :param int w: description
-      :param int h: description
-      :param int font: description
-      :param int options: description
-      :param str s: description
+      :param int x: x-coordinate
+      :param int y: y-coordinate
+      :param int w: width
+      :param int h: height
+      :param int font: font number 0-31
+      :param int options: see below
+      :param str s: key labels
 
       .. include:: gen/example-cmd_keys.rst
 
   .. method:: cmd_loadidentity()
 
-      Description
+      Set the current bitmap transform matrix to the identity:
+
+      .. math::
+
+         \begin{bmatrix}
+         1 & 0 & 0 \\
+         0 & 1 & 0 \\
+         \end{bmatrix}
 
 
   .. method:: cmd_loadimage(ptr, options!)
 
-      Description
+      Load an image into a bitmap
 
-      :param int ptr: description
-      :param options! int: description
+      :param int ptr: destination address in EVE memory
+      :param options int: options
+
+      This command is followed by the image data itself.
+      Images may be in JPG or PNG format.
+
+      .. include:: gen/example-cmd_loadimage.rst
 
   .. method:: cmd_logo()
 
-      Description
-
+      Display the BridgeTek logo.
 
   .. method:: cmd_mediafifo(ptr, size)
 
-      Description
+      Set the memory region used for the media FIFO
 
-      :param int ptr: description
-      :param int size: description
+      :param int ptr: start address in EVE memory
+      :param int size: size of the media FIFO in bytes
 
   .. method:: cmd_memcpy(dest, src, num)
 
-      Description
+      Copy EVE memory
 
-      :param int dest: description
-      :param int src: description
-      :param int num: description
+      :param int dest: destination address in EVE memory
+      :param int src: source address in EVE memory
+      :param int num: number of bytes to copy
 
   .. method:: cmd_memcrc(ptr, num, result)
 
-      Description
+      Compute the CRC-32 of a region of EVE memory
 
-      :param int ptr: description
-      :param int num: description
-      :param int result: description
+      :param int ptr: start address in EVE memory
+      :param int num: size of region in bytes
+      :param int result: address to write destination CRC in EVE memory
 
   .. method:: cmd_memset(ptr, value, num)
 
-      Description
+      Set a region of EVE memory to a byte value
 
-      :param int ptr: description
-      :param int value: description
-      :param int num: description
+      :param int ptr: destination address in EVE memory
+      :param int value: byte value
+      :param int num: size of region in bytes
 
-  .. method:: cmd_memwrite(ptr, num!)
+  .. method:: cmd_memwrite(ptr, num)
 
-      Description
+      Write the following inline data into EVE memory
 
-      :param int ptr: description
-      :param num! int: description
+      :param int ptr: destination address in EVE memory
+      :param num int: number of bytes to write
+
+      This command is followed by the inline data, and is padded to a 4-byte boundary.
+      See :meth:`cc` and :func:`align4`.
 
   .. method:: cmd_memzero(ptr, num)
 
-      Description
+      Set a region of EVE memory to zero
 
-      :param int ptr: description
-      :param int num: description
+      :param int ptr: destination address in EVE memory
+      :param int num: size of region in bytes
 
   .. method:: cmd_newlist(a)
 
-      Description
+      Start compiling a call list
 
-      :param int a: description
+      :param int a: call list pointer
+
+      .. note:: 817 only
 
   .. method:: cmd_nop()
 
-      Description
-
+      No operation.
 
   .. method:: cmd_number(x, y, font, options, n)
 
-      Description
+      Draw a number
 
-      :param int x: description
-      :param int y: description
-      :param int font: description
-      :param int options: description
-      :param int n: description
+      :param int x: x-coordinate
+      :param int y: y-coordinate
+      :param int font: font number 0-31
+      :param int options: see below
+      :param int n: number
+
+      renders a number ``n`` in font ``font``
+      at screen (``x``, ``y``).
+      If an integer :math:`n` is supplied as an option,
+      then leading zeroes are added so that :math:`n` digits are always drawn.
+
+      The following options may be logically-ored together:
+
+      * :data:`OPT_CENTER` shorthand for (:data:`OPT_CENTERX` | :data:`OPT_CENTERY`)
+      * :data:`OPT_CENTERX` center element in the x direction
+      * :data:`OPT_CENTERY` center element in the y direction
+      * :data:`OPT_SIGNED` treat paramter ``n`` as signed. The default is unsigned
+      * 0-32 draw the number so that :math:`n` digits are always drawn
+
+      See also :meth:`cmd_setbase`
 
       .. include:: gen/example-cmd_number.rst
 
   .. method:: cmd_pclkfreq(ftarget, rounding, factual)
 
-      Description
+      Set the PCLK frequency
 
-      :param int ftarget: description
-      :param int rounding: description
-      :param int factual: description
+      :param int ftarget: target frequency, in Hz
+      :param int rounding: rounding mode
+      :param int factual: return value, actual frequency
+
+      .. note:: 817 only
 
   .. method:: cmd_playvideo(options!)
 
-      Description
+      Play a video from inline video data
 
-      :param options! int: description
+      :param options int: playback options
 
   .. method:: cmd_progress(x, y, w, h, options, val, range)
 
-      Description
+      Draw a progress bar
 
-      :param int x: description
-      :param int y: description
-      :param int w: description
-      :param int h: description
-      :param int options: description
-      :param int val: description
-      :param int range: description
+      :param int x: x-coordinate
+      :param int y: y-coordinate
+      :param int w: width
+      :param int h: height
+      :param int options: see below
+      :param int val: progress bar value
+      :param int range: progress bar range
 
       .. include:: gen/example-cmd_progress.rst
 
+      The following options may be logically-ored together:
+
+      * :data:`OPT_FLAT` render the element without 3D decorations
+
   .. method:: cmd_regread(ptr, result)
 
-      Description
+      Reads a 32-bit value from EVE memory
 
-      :param int ptr: description
-      :param int result: description
+      :param int ptr: source address in EVE memory
+      :param int result: register value
+
+  .. method:: cmd_regwrite(ptr, val)
+
+      Writes a 32-bit value to EVE memory
+
+      :param int ptr: address in EVE memory
+      :param int val: 32-bit value
 
   .. method:: cmd_resetfonts()
 
-      Description
-
+      Reset all ROM fonts (numbers 16-31) to their default settings
 
   .. method:: cmd_return()
 
-      Description
+      Return from a Call List
 
+      .. note:: 817 only
 
   .. method:: cmd_romfont(font, romslot)
 
-      Description
+      Load a ROM font into a font handle
 
-      :param int font: description
-      :param int romslot: description
+      :param int font: font number 0-31
+      :param int romslot: ROM font number 16-34
 
   .. method:: cmd_rotate(a)
 
-      Description
+      Apply a rotation to the bitmap transform matrix
 
-      :param int a: description
+      :param float a: clockwise rotation angle, in degrees
 
   .. method:: cmd_rotatearound(x, y, a, s)
 
-      Description
+      Apply a rotation and scale to the bitmap transform matrix around a given point
 
-      :param int x: description
-      :param int y: description
-      :param int a: description
-      :param int s: description
+      :param int x: center of rotation x-coordinate
+      :param int y: center of rotation y-coordinate
+      :param float a: clockwise rotation angle, in degrees
+      :param float s: scale factor
 
   .. method:: cmd_runanim(waitmask, play)
 
-      Description
+      Run all active animations
 
       :param int waitmask: description
-      :param int play: description
+      :param int play: y-coordinate
+
+      .. note:: 817 only
 
   .. method:: cmd_scale(sx, sy)
 
-      Description
+      Apply a scale to the bitmap transform matrix
 
-      :param int sx: description
-      :param int sy: description
+      :param float sx: x-axis scale factor
+      :param float sy: y-axis scale factor
 
   .. method:: cmd_screensaver()
 
-      Description
-
+      Run the screen-saver function. Use :meth:`cmd_stop` to stop it.
 
   .. method:: cmd_scrollbar(x, y, w, h, options, val, size, range)
 
-      Description
+      Draw a scroll bar
 
-      :param int x: description
-      :param int y: description
-      :param int w: description
-      :param int h: description
-      :param int options: description
-      :param int val: description
-      :param int size: description
-      :param int range: description
+      :param int x: x-coordinate
+      :param int y: y-coordinate
+      :param int w: width
+      :param int h: height
+      :param int options: see below
+      :param int val: bar starting position
+      :param int size: bar size
+      :param int range: range of entire bar
+
+      The following options may be logically-ored together:
+
+      * :data:`OPT_FLAT` render the element without 3D decorations
 
       .. include:: gen/example-cmd_scrollbar.rst
 
   .. method:: cmd_setbase(b)
 
-      Description
+      Set the base used by :math:`cmd_number`. The default base is 10 (decimal)
 
-      :param int b: description
+      :param int b: base, 1-36
 
   .. method:: cmd_setbitmap(source, fmt, w, h)
 
-      Description
+      Set all the parameters for a bitmap.
 
-      :param int source: description
-      :param int fmt: description
-      :param int w: description
-      :param int h: description
+      :param int source: bitmap source address in EVE memory
+      :param int fmt: bitmap format, see :ref:`formats`
+      :param int w: width
+      :param int h: height
 
   .. method:: cmd_setfont(font, ptr)
 
-      Description
+      Load a font slot from a font in RAM
 
-      :param int font: description
-      :param int ptr: description
+      :param int font: font number 0-31
+      :param int ptr: address to the font register value
 
   .. method:: cmd_setfont2(font, ptr, firstchar)
 
-      Description
+      Load a font slot from a font in RAM
 
-      :param int font: description
-      :param int ptr: description
-      :param int firstchar: description
+      :param int font: font number 0-31
+      :param int ptr: address of the font descriptor block in EVE memory
+      :param int firstchar: first valid character in font
 
   .. method:: cmd_setmatrix()
 
-      Description
-
+      Append the current transform matrix to the display list.
 
   .. method:: cmd_setrotate(r)
 
-      Description
+      Change screen orientation by setting
+      :data:`REG_ROTATE` and adjusting the touch transform matrix.
 
-      :param int r: description
+      :param int r: new orientation
 
   .. method:: cmd_setscratch(handle)
 
-      Description
+      Set the bitmap handle used for widget drawing.
+      The default handle is 15.
 
-      :param int handle: description
+      :param int handle: bitmap handle
 
   .. method:: cmd_sketch(x, y, w, h, ptr, format)
 
-      Description
+      Begin sketching.
+      Use :meth:`cmd_stop` to stop it.
 
-      :param int x: description
-      :param int y: description
-      :param int w: description
-      :param int h: description
-      :param int ptr: description
-      :param int format: description
+      :param int x: x-coordinate
+      :param int y: y-coordinate
+      :param int w: width
+      :param int h: height
+      :param int ptr: bitmap start address
+      :param int format: either :data:`L1` or :data:`L8`
 
   .. method:: cmd_slider(x, y, w, h, options, val, range)
 
-      Description
+      Draw a slider
 
-      :param int x: description
-      :param int y: description
-      :param int w: description
-      :param int h: description
-      :param int options: description
-      :param int val: description
-      :param int range: description
+      :param int x: x-coordinate
+      :param int y: y-coordinate
+      :param int w: width
+      :param int h: height
+      :param int options: see below
+      :param int val: position of slider knob
+      :param int range: range of entire slider
+
+      The following options may be logically-ored together:
+
+      * :data:`OPT_FLAT` render the element without 3D decorations
 
       .. include:: gen/example-cmd_slider.rst
 
   .. method:: cmd_snapshot(ptr)
 
-      Description
+      Write a snapshot of the current screen as a bitmap
 
-      :param int ptr: description
+      :param int ptr: destination bitmap address in EVE memory
 
   .. method:: cmd_snapshot2(fmt, ptr, x, y, w, h)
 
-      Description
+      Write a snapshot of the current screen as a bitmap
 
-      :param int fmt: description
-      :param int ptr: description
-      :param int x: description
-      :param int y: description
-      :param int w: description
-      :param int h: description
+      :param int fmt: bitmap format
+      :param int ptr: destination bitmap address in EVE memory
+      :param int x: x-coordinate
+      :param int y: y-coordinate
+      :param int w: width of snapshot rectangle
+      :param int h: height of snapshot rectangle
 
   .. method:: cmd_spinner(x, y, style, scale)
 
-      Description
+      Display a "waiting" spinner
+      Use :meth:`cmd_stop` to stop it.
 
-      :param int x: description
-      :param int y: description
-      :param int style: description
-      :param int scale: description
+      :param int x: x-coordinate
+      :param int y: y-coordinate
+      :param int style: see below
+      :param int scale: element size. 0 is small, 1 medium, 2 huge.
+
+      There are four spinner styles available:
+
+      * ``0`` circular
+      * ``1`` linear
+      * ``2`` clock
+      * ``3`` rotating disks
 
       .. include:: gen/example-cmd_spinner.rst
 
   .. method:: cmd_stop()
 
-      Description
+      Stop any currently running background tasks.
 
 
   .. method:: cmd_swap()
 
-      Description
-
+      Low-level command to swap the display lists
 
   .. method:: cmd_sync()
 
-      Description
-
+      Delay execution until the next vertical blanking interval
 
   .. method:: cmd_testcard()
 
-      Description
+      Draw a diagnostic test-card
 
+      .. note:: 817 only
 
   .. method:: cmd_text(x, y, font, options, s)
 
-      Description
+      Draws text
 
-      :param int x: description
-      :param int y: description
-      :param int font: description
-      :param int options: description
-      :param str s: description
+      :param int x: x-coordinate
+      :param int y: y-coordinate
+      :param int font: font number 0-31
+      :param int options: see below
+      :param str s: text
 
-  .. method:: cmd_toggle(x, y, w, font, options, state, s)
+      renders a number ``n`` in font ``font``
+      at screen (``x``, ``y``).
 
-      Description
+      The following options may be logically-ored together:
 
-      :param int x: description
-      :param int y: description
-      :param int w: description
-      :param int font: description
-      :param int options: description
-      :param int state: description
-      :param str s: description
+      * :data:`OPT_CENTER` shorthand for (:data:`OPT_CENTERX` | :data:`OPT_CENTERY`)
+      * :data:`OPT_CENTERX` center element in the x direction
+      * :data:`OPT_CENTERY` center element in the y direction
+      * :data:`OPT_RIGHTX` right-justify the element
+      * :data:`OPT_FILL` apply multi-line text fill, see :meth:`cmd_fillwidth`
+      * :data:`OPT_FORMAT` use a printf-style format string
+
+      .. include:: gen/example-cmd_text.rst
+
+  .. method:: cmd_toggle(x, y, w, font, options, state, s1, s0)
+
+      Draws a toggle widget
+
+      :param int x: x-coordinate
+      :param int y: y-coordinate
+      :param int w: width
+      :param int font: font number 0-31
+      :param int options: see below
+      :param int state: toggle position 0-65535
+      :param str s1: label for right side
+      :param str s0: label for left side
 
       .. include:: gen/example-cmd_toggle.rst
 
-  .. method:: cmd_touch_transform(x0, y0, x1, y1, x2, y2, tx0, ty0, tx1, ty1, tx2, ty2, result)
+      The following options may be logically-ored together:
 
-      Description
-
-      :param x0 int: description
-      :param y0 int: description
-      :param x1 int: description
-      :param y1 int: description
-      :param x2 int: description
-      :param y2 int: description
-      :param tx0 int: description
-      :param ty0 int: description
-      :param tx1 int: description
-      :param ty1 int: description
-      :param tx2 int: description
-      :param ty2 int: description
-      :param int result: description
+      * :data:`OPT_FLAT` render the element without 3D decorations
+      * :data:`OPT_FORMAT` use a printf-style format string
 
   .. method:: cmd_track(x, y, w, h, tag)
 
-      Description
+      Start tracking touches for a graphical object
 
-      :param int x: description
-      :param int y: description
-      :param int w: description
-      :param int h: description
-      :param int tag: description
+      :param int x: x-coordinate
+      :param int y: y-coordinate
+      :param int w: width
+      :param int h: height
+      :param int tag: object tag number 0-255
+
+      Up to 255 objects may be tracked.
+      Each object may be either linear (if either ``width`` or ``height`` is 1)
+      or rotary (if both ``width`` and ``height`` are 1).
 
   .. method:: cmd_translate(tx, ty)
 
-      Description
+      Apply a translation to the bitmap transform matrix
 
-      :param int tx: description
-      :param int ty: description
+      :param int tx: translation in x-axis
+      :param int ty: translation in y-axis
 
   .. method:: cmd_videoframe(dst, ptr)
 
-      Description
+      Decode a single video frame
 
-      :param int dst: description
-      :param int ptr: description
+      :param int dst: bitmap destination in EVE memory
+      :param int ptr: completion flag address in EVE memory
 
   .. method:: cmd_videostart()
 
-      Description
-
+      Start video playback
 
   .. method:: cmd_videostartf()
 
-      Description
+      Start video playback
 
 
   .. method:: cmd_wait(us)
 
-      Description
+      Wait
 
-      :param int us: description
+      :param int us: wait duration in microseconds
 
+      .. note:: 817 only
 
 Module constants
 ----------------
@@ -1446,8 +1551,10 @@ Constants for :meth:`BitmapSwizzle`
 .. data:: ALPHA
   :value: 5
 
-Bitmap Formats used by :meth:`BitmapLayout`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. _formats:
+
+Bitmap Formats used by :meth:`EVE.BitmapLayout` and :meth:`EVE.cmd_setbitmap`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. data:: ARGB1555
   :value: 0
@@ -2024,7 +2131,6 @@ Indices and tables
 ==================
 
 * :ref:`genindex`
-* :ref:`modindex`
 * :ref:`search`
 
       The following options may be logically-ored together:

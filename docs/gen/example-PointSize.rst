@@ -11,7 +11,7 @@ Examples
             gd.Vertex2f(x, random.randrange(272))
         
         
-.. image:: /gen/images/0017.png
+.. image:: /gen/images/0016.png
 
 |
 

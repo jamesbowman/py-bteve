@@ -11,7 +11,7 @@ Examples
         gd.Vertex2f(10, 140); gd.Vertex2f(470, 260)
         
         
-.. image:: /gen/images/0016.png
+.. image:: /gen/images/0015.png
 
 |
 

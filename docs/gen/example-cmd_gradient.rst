@@ -8,7 +8,7 @@ Examples
         gd.cmd_text(240, 136, 31, eve.OPT_CENTER, "READY PLAYER ONE")
         
         
-.. image:: /gen/images/0014.png
+.. image:: /gen/images/0013.png
 
 |
 

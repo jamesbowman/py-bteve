@@ -12,7 +12,7 @@ Examples
         gd.Clear()
         
         
-.. image:: /gen/images/0023.png
+.. image:: /gen/images/0022.png
 
 |
 

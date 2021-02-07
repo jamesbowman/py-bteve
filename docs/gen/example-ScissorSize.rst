@@ -15,7 +15,7 @@ Examples
         gd.cmd_text(240, 136, 31, eve.OPT_CENTER, "Scissor Example")
         
         
-.. image:: /gen/images/0019.png
+.. image:: /gen/images/0018.png
 
 |
 
