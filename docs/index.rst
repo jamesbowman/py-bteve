@@ -8,7 +8,7 @@ bteve documentation
 .. highlight:: python
 
 ``bteve`` is a Python driver for BridgeTek's EVE series GPUs.
-In particular it supports the Gameduino 3X series of display devices.
+In particular it supports the `Gameduino 3X <https://gameduino.com>`_ series of display devices.
 
 It supports:
 
@@ -20,12 +20,15 @@ It supports:
 .. image:: /images/helloworld.png
 
 Module classes
---------------
+==============
+
+Gameduino
+---------
+
+The Gameduino class is a specialization of the base class :class:`EVE`.
 
 .. class:: Gameduino
   
-  The Gameduino class is a specialization of the base class :class:`EVE`.
-
   .. method:: init()
 
       Initialize the EVE hardware, calling method
@@ -79,90 +82,102 @@ Module classes
 
   .. method:: result(n = 1)
 
-|
+EVE
+---
+
+This class includes all graphics drawing operations,
+graphics state operations, and graphics commands.
+
+Methods for simple drawing and drawing state:
+
+ * :meth:`~EVE.~EVE.Begin`
+ * :meth:`~EVE.Vertex2f`
+ * :meth:`~EVE.LineWidth`
+ * :meth:`~EVE.PointSize`
+ * :meth:`~EVE.BitmapHandle`
+ * :meth:`~EVE.Cell`
+ * :meth:`~EVE.ColorRGB`
+ * :meth:`~EVE.ColorA`
+ * :meth:`~EVE.End`
+ * :meth:`~EVE.Vertex2ii`
+
+Methods for clearing the screen:
+
+ * :meth:`~EVE.ClearColorA`
+ * :meth:`~EVE.ClearColorRGB`
+ * :meth:`~EVE.Clear`
+
+Methods to set the 2D scissor clipping rectangle:
+
+ * :meth:`~EVE.ScissorSize`
+ * :meth:`~EVE.ScissorXY`
+
+Methods to set the tag state, so that touch events can be attached to screen objects:
+
+ * :meth:`~EVE.ClearTag`
+ * :meth:`~EVE.TagMask`
+ * :meth:`~EVE.Tag`
+
+Methods to preserve and restore the graphics state:
+
+ * :meth:`~EVE.RestoreContext`
+ * :meth:`~EVE.SaveContext`
+
+Methods to control rendering and display:
+
+ * :meth:`~EVE.swap`
+ * :meth:`~EVE.flush`
+ * :meth:`~EVE.finish`
+
+Methods to set the alpha blend state, allowing more advanced transparency and compositing operations:
+
+ * :meth:`~EVE.AlphaFunc`
+ * :meth:`~EVE.BlendFunc`
+ * :meth:`~EVE.ColorMask`
+
+Methods to set the stencil state, allowing conditional drawing and other logial operations:
+
+ * :meth:`~EVE.ClearStencil`
+ * :meth:`~EVE.StencilFunc`
+ * :meth:`~EVE.StencilMask`
+ * :meth:`~EVE.StencilOp`
+
+Low-level methods to set the bitmap format
+(See :meth:`~EVE.cmd_setbitmap` for a higher-level alternative.):
+
+ * :meth:`~EVE.BitmapExtFormat`
+ * :meth:`~EVE.BitmapLayoutH`
+ * :meth:`~EVE.BitmapLayout`
+ * :meth:`~EVE.BitmapSizeH`
+ * :meth:`~EVE.BitmapSize`
+ * :meth:`~EVE.BitmapSource`
+ * :meth:`~EVE.BitmapSwizzle`
+ * :meth:`~EVE.PaletteSource`
+
+Low-level methods set the bitmap transform matrix
+(See :meth:`~EVE.cmd_scale`, :meth:`cmd_translate`, :meth:`cmd_setmatrix` etc. for a higher-level alternative.):
+
+ * :meth:`~EVE.BitmapTransformA`
+ * :meth:`~EVE.BitmapTransformB`
+ * :meth:`~EVE.BitmapTransformC`
+ * :meth:`~EVE.BitmapTransformD`
+ * :meth:`~EVE.BitmapTransformE`
+ * :meth:`~EVE.BitmapTransformF`
+ * :meth:`~EVE.Macro`
+
+Methods to set the precision and offset used by :meth:`Vertex2f`:
+
+ * :meth:`VertexTranslateX`
+ * :meth:`VertexTranslateY`
+ * :meth:`VertexFormat`
 
 .. class:: EVE
-
-  This class includes all graphics drawing operations,
-  graphics state operations, and graphics commands.
-
-  Methods for simple drawing and drawing state:
-  :meth:`Begin`,
-  :meth:`Vertex2f`,
-  :meth:`LineWidth`,
-  :meth:`PointSize`,
-  :meth:`BitmapHandle`,
-  :meth:`Cell`,
-  :meth:`ColorRGB`,
-  :meth:`ColorA`,
-  :meth:`End`,
-  :meth:`Vertex2ii`.
-
-  Methods for controlling and triggering the clear screen operation.
-  :meth:`ClearColorA`
-  :meth:`ClearColorRGB`
-  :meth:`Clear`
-
-  Methods to set the stencil state, allowing conditional drawing and other logial operations.
-  :meth:`StencilFunc`
-  :meth:`StencilMask`
-  :meth:`StencilOp`
-
-  Methods to set the 2D scissor clipping rectangle
-  :meth:`ScissorSize`
-  :meth:`ScissorXY`
-
-  Methods to set the tag state, so that touch events can be attached to screen objects:
-  :meth:`ClearTag`
-  :meth:`TagMask`
-  :meth:`Tag`
-
-  Methods to preserve and restore the graphics state.
-  :meth:`RestoreContext`
-  :meth:`SaveContext`
-
-  Methods to control rendering and display
-  :meth:`swap`
-  :meth:`flush`
-  :meth:`finish`
-
-
-  methods to set the alpha blend state, allowing more advanced transparency and compositing operations:
-  :meth:`AlphaFunc`
-  :meth:`BlendFunc`
-  :meth:`ColorMask`
-
-  Low-level methods to set the bitmap format.
-  (See :meth:`cmd_setbitmap` for a higher-level alternative.)
-  :meth:`BitmapExtFormat`,
-  :meth:`BitmapLayoutH`,
-  :meth:`BitmapLayout`,
-  :meth:`BitmapSizeH`,
-  :meth:`BitmapSize`,
-  :meth:`BitmapSource`,
-  :meth:`BitmapSwizzle`,
-  :meth:`PaletteSource`.
-
-  Low-level methods set the bitmap transform matrix.
-  (See :meth:`cmd_scale`, :meth:`cmd_translate`, :meth:`cmd_setmatrix` etc. for a higher-level alternative.)
-  :meth:`BitmapTransformA`,
-  :meth:`BitmapTransformB`,
-  :meth:`BitmapTransformC`,
-  :meth:`BitmapTransformD`,
-  :meth:`BitmapTransformE`,
-  :meth:`BitmapTransformF`.
-  :meth:`Macro`
-
-  Methods to set the precision and offset used by :meth:`Vertex2f`.
-  :meth:`VertexTranslateX`
-  :meth:`VertexTranslateY`
-  :meth:`VertexFormat`
 
   .. method:: AlphaFunc(func, ref) 
 
       Set the alpha test function
 
-      :param int func: specifies the test function, one of ``NEVER``, ``LESS``, ``LEQUAL``, ``GREATER``, ``GEQUAL``, ``EQUAL``, ``NOTEQUAL``, or ``ALWAYS``. Range 0-7. The initial value is ALWAYS(7)
+      :param int func: specifies the test function, one of :data:`NEVER`, :data:`LESS`, :data:`LEQUAL`, :data:`GREATER`, :data:`GEQUAL`, :data:`EQUAL`, :data:`NOTEQUAL`, or :data:`ALWAYS`. Range 0-7. The initial value is ALWAYS(7)
       :param int ref: specifies the reference value for the alpha test. Range 0-255. The initial value is 0
 
       These values are part of the graphics context and are saved and restored by :meth:`SaveContext` and :meth:`RestoreContext`.
@@ -173,7 +188,7 @@ Module classes
 
       :param int prim: graphics primitive.
 
-      Valid primitives are :data:`BITMAPS`, ``POINTS``, ``LINES``, ``LINE_STRIP``, ``EDGE_STRIP_R``, ``EDGE_STRIP_L``, ``EDGE_STRIP_A``, ``EDGE_STRIP_B`` and ``RECTS``.
+      Valid primitives are :data:`BITMAPS`, :data:`POINTS`, :data:`LINES`, :data:`LINE_STRIP`, :data:`EDGE_STRIP_R`, :data:`EDGE_STRIP_L`, :data:`EDGE_STRIP_A`, :data:`EDGE_STRIP_B` and :data:`RECTS`.
 
       .. include:: gen/example-Begin.rst
 
@@ -210,9 +225,9 @@ Module classes
 
       Set the screen drawing of bitmaps for the current handle
 
-      :param int filter: bitmap filtering mode, one of ``NEAREST`` or ``BILINEAR``. Range 0-1
-      :param int wrapx: bitmap :math:`x` wrap mode, one of ``REPEAT`` or ``BORDER``. Range 0-1
-      :param int wrapy: bitmap :math:`y` wrap mode, one of ``REPEAT`` or ``BORDER``. Range 0-1
+      :param int filter: bitmap filtering mode, one of :data:`NEAREST` or :data:`BILINEAR`.
+      :param int wrapx: bitmap :math:`x` wrap mode, one of :data:`REPEAT` or :data:`BORDER`.
+      :param int wrapy: bitmap :math:`y` wrap mode, one of :data:`REPEAT` or :data:`BORDER`.
       :param int width: drawn bitmap width, in pixels. Range 0-511
       :param int height: drawn bitmap height, in pixels. Range 0-511
 
@@ -311,8 +326,8 @@ Module classes
 
       Set pixel arithmetic
 
-      :param int src: specifies how the source blending factor is computed.  One of ``ZERO``, ``ONE``, ``SRC_ALPHA``, ``DST_ALPHA``, ``ONE_MINUS_SRC_ALPHA`` or ``ONE_MINUS_DST_ALPHA``. Range 0-7. The initial value is SRC_ALPHA(2)
-      :param int dst: specifies how the destination blending factor is computed, one of the same constants as **src**. Range 0-7. The initial value is ONE_MINUS_SRC_ALPHA(4)
+      :param int src: specifies how the source blending factor is computed.  One of :data:`ZERO`, :data:`ONE`, :data:`SRC_ALPHA`, :data:`DST_ALPHA`, :data:`ONE_MINUS_SRC_ALPHA` or :data:`ONE_MINUS_DST_ALPHA`. The initial value is SRC_ALPHA
+      :param int dst: specifies how the destination blending factor is computed, one of the same constants as **src**. The initial value is ONE_MINUS_SRC_ALPHA
 
       These values are part of the graphics context and are saved and restored by :meth:`SaveContext` and :meth:`RestoreContext`.
 
@@ -320,7 +335,7 @@ Module classes
 
   .. method:: Cell(cell) 
 
-      Set the bitmap cell number used by :meth:`Vertex2f` when drawing ``BITMAPS``.
+      Set the bitmap cell number used by :meth:`Vertex2f` when drawing :data:`BITMAPS`.
 
       :param int cell: bitmap cell number. Range 0-127. The initial value is 0
 
@@ -488,7 +503,7 @@ Module classes
 
       Set function and reference value for stencil testing
 
-      :param int func: specifies the test function, one of ``NEVER``, ``LESS``, ``LEQUAL``, ``GREATER``, ``GEQUAL``, ``EQUAL``, ``NOTEQUAL``, or ``ALWAYS``. Range 0-7. The initial value is ALWAYS(7)
+      :param int func: specifies the test function, one of :data:`NEVER`, :data:`LESS`, :data:`LEQUAL`, :data:`GREATER`, :data:`GEQUAL`, :data:`EQUAL`, :data:`NOTEQUAL`, or :data:`ALWAYS`. The initial value is ALWAYS
       :param int ref: specifies the reference value for the stencil test. Range 0-255. The initial value is 0
       :param int mask: specifies a mask that is ANDed with the reference value and the stored stencil value. Range 0-255. The initial value is 255
 
@@ -506,8 +521,8 @@ Module classes
 
       Set stencil test actions
 
-      :param int sfail: specifies the action to take when the stencil test fails, one of ``KEEP``, ``ZERO``, ``REPLACE``, ``INCR``, ``INCR_WRAP``, ``DECR``, ``DECR_WRAP``, and ``INVERT``. Range 0-7. The initial value is KEEP(1)
-      :param int spass: specifies the action to take when the stencil test passes, one of the same constants as **sfail**. Range 0-7. The initial value is KEEP(1)
+      :param int sfail: specifies the action to take when the stencil test fails, one of :data:`KEEP`, :data:`ZERO`, :data:`REPLACE`, :data:`INCR`, :data:`INCR_WRAP`, :data:`DECR`, :data:`DECR_WRAP`, and :data:`INVERT`. The initial value is KEEP
+      :param int spass: specifies the action to take when the stencil test passes, one of the same constants as **sfail**. The initial value is KEEP
 
       These values are part of the graphics context and are saved and restored by :meth:`SaveContext` and :meth:`RestoreContext`.
 
@@ -539,13 +554,14 @@ Module classes
 
   .. method:: Vertex2ii(x, y, handle, cell) 
 
+      Draw a vertex.
+
       :param int x: x-coordinate in pixels. Range 0-511
       :param int y: y-coordinate in pixels. Range 0-511
       :param int handle: bitmap handle. Range 0-31
       :param int cell: cell number. Range 0-127
 
       This method is an alternative to :meth:`BitmapHandle`, :meth:`Cell` and :meth:`Vertex2f`.
-
 
   .. method:: VertexFormat(frac) 
 
@@ -580,7 +596,7 @@ Module classes
   .. method:: finish()
 
       Send any queued drawing commands directly to the hardware,
-      and return when they have all cometed execution.
+      and return after they have all completed execution.
 
   .. method:: flush() 
 
@@ -588,7 +604,8 @@ Module classes
 
   .. method:: swap() 
 
-      End the display list, dispatch it to the graphics hardware, start compiling the display list for the next frame.
+      End the current display list and dispatch it to the graphics hardware.
+      Start compiling the display list for the next frame.
 
   .. method:: cmd_animdraw(ch)
 
@@ -661,9 +678,8 @@ Module classes
       :param int ptr: address in EVE memory, 32-bit aligned
       :param int num: byte count, 32-bit aligned
 
-      The ``append`` command
-      executes ``num`` bytes of drawing commands from graphics memory at
-      ``ptr``.  This can be useful for using graphics memory as a cache
+      Executes **num** bytes of drawing commands from graphics memory at
+      **ptr**.  This can be useful for using graphics memory as a cache
       for frequently used drawing sequences, much like OpenGL's display lists.
 
   .. method:: cmd_appendf(ptr, num)
@@ -783,9 +799,10 @@ Module classes
   .. method:: cmd_crc(ptr)
 
       Compute a CRC-32 for the currently displayed image
-      write it to 
 
       :param int ptr: address in EVE memory
+
+      The 32-bit CRC is written to the given address.
 
   .. method:: cmd_dial(x, y, r, options, val)
 
@@ -795,7 +812,7 @@ Module classes
       :param int y: y-coordinate
       :param int r: description
       :param int options: see below
-      :param int val: description
+      :param int val: value, 0-65535
 
       The following options may be logically-ored together:
 
@@ -1507,10 +1524,10 @@ Module classes
       .. note:: 817 only
 
 Module constants
-----------------
+================
 
 Constants for :meth:`EVE.StencilFunc` and :meth:`AlphaFunc`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-----------------------------------------------------------
 
 .. data:: NEVER
   :value: 0
@@ -1537,7 +1554,7 @@ Constants for :meth:`EVE.StencilFunc` and :meth:`AlphaFunc`
   :value: 7
 
 Constants for :meth:`BitmapSwizzle`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-----------------------------------
 
 .. data:: RED
   :value: 2
@@ -1554,7 +1571,7 @@ Constants for :meth:`BitmapSwizzle`
 .. _formats:
 
 Bitmap Formats used by :meth:`EVE.BitmapLayout` and :meth:`EVE.cmd_setbitmap`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-----------------------------------------------------------------------------
 
 .. data:: ARGB1555
   :value: 0
@@ -1650,7 +1667,7 @@ Bitmap Formats used by :meth:`EVE.BitmapLayout` and :meth:`EVE.cmd_setbitmap`
   :value: 0x93BD  
 
 Filter types for :meth:`BitmapSize`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-----------------------------------
 
 .. data:: NEAREST
   :value: 0
@@ -1659,7 +1676,7 @@ Filter types for :meth:`BitmapSize`
   :value: 1
 
 Wrap types for :meth:`BitmapSize`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+---------------------------------
 
 .. data:: BORDER
   :value: 0
@@ -1668,7 +1685,7 @@ Wrap types for :meth:`BitmapSize`
   :value: 1
 
 Actions for :meth:`StencilFunc`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-------------------------------
 
 .. data:: KEEP
   :value: 1
@@ -1686,7 +1703,7 @@ Actions for :meth:`StencilFunc`
   :value: 5
 
 Blend factors for :meth:`BlendFunc`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-----------------------------------
 
 .. data:: ZERO
   :value: 0
@@ -1707,7 +1724,7 @@ Blend factors for :meth:`BlendFunc`
   :value: 5
 
 Primitive types for :meth:`Begin`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+---------------------------------
 
 .. data:: BITMAPS
   :value: 1
@@ -1737,7 +1754,7 @@ Primitive types for :meth:`Begin`
   :value: 9
 
 Options bitfields
-^^^^^^^^^^^^^^^^^
+-----------------
 
 .. data:: OPT_MONO
   :value: 1
@@ -1794,7 +1811,7 @@ Options bitfields
   :value: 8192    
 
 Sample formats for use with :data:`REG_PLAYBACK_FORMAT`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-------------------------------------------------------
 
 .. data:: LINEAR_SAMPLES
   :value: 0
@@ -1806,7 +1823,7 @@ Sample formats for use with :data:`REG_PLAYBACK_FORMAT`
   :value: 2
 
 Instrument names for use with :data:`REG_SOUND`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-----------------------------------------------
 
 .. data:: HARP
   :value: 0x40    
@@ -1872,7 +1889,7 @@ Instrument names for use with :data:`REG_SOUND`
   :value: 0x61
 
 Hardware register addresses
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+---------------------------
 
 .. data:: RAM_CMD
   :value: 0x308000
@@ -2132,14 +2149,3 @@ Indices and tables
 
 * :ref:`genindex`
 * :ref:`search`
-
-      The following options may be logically-ored together:
-
-      * :data:`OPT_CENTER` shorthand for (:data:`OPT_CENTERX` | :data:`OPT_CENTERY`)
-      * :data:`OPT_CENTERX` center element in the x direction
-      * :data:`OPT_CENTERY` center element in the y direction
-      * :data:`OPT_FILL` apply multi-line text fill, see :meth:`cmd_fillwidth`
-      * :data:`OPT_FLAT` render the element without 3D decorations
-      * :data:`OPT_FORMAT` use a printf-style format string
-      * :data:`OPT_NOBACK` do not draw the dial back
-      * :data:`OPT_NOTICKS` do not draw tick marks
