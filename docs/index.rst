@@ -19,6 +19,10 @@ It supports:
 
 .. image:: /images/helloworld.png
 
+.. literalinclude:: ../examples/fizz.py
+
+.. image:: /images/fizz.png
+
 Module classes
 ==============
 
@@ -27,13 +31,15 @@ Gameduino
 
 The Gameduino class is a specialization of the base class :class:`EVE`.
 
-.. class:: Gameduino
+.. class:: Gameduino([d])
+
+  :param spidriver d: when running on a PC, a SPIDriver object for communicating with the EVE hardware
   
   .. method:: init()
 
       Initialize the EVE hardware, calling method
-      Calls method :meth:`coldstart`.
-      Confirm that it is running.
+      :meth:`coldstart`.
+      Confirm that the BT81x is running, configure it for the attached screen, and render a blank frame.
 
   .. data:: w
 
@@ -82,15 +88,19 @@ The Gameduino class is a specialization of the base class :class:`EVE`.
 
   .. method:: result(n = 1)
 
+      :returns int: result field
+
+      Return the result field of the most recent command, if any.
+
 EVE
 ---
 
-This class includes all graphics drawing operations,
+This class provides all graphics drawing operations,
 graphics state operations, and graphics commands.
 
 Methods for simple drawing and drawing state:
 
- * :meth:`~EVE.~EVE.Begin`
+ * :meth:`~EVE.Begin`
  * :meth:`~EVE.Vertex2f`
  * :meth:`~EVE.LineWidth`
  * :meth:`~EVE.PointSize`
@@ -587,25 +597,7 @@ Methods to set the precision and offset used by :meth:`Vertex2f`:
 
       This value is part of the graphics context and is saved and restored by :meth:`SaveContext` and :meth:`RestoreContext`.
 
-  .. method:: cc(b) 
-
-      Append bytes to the command FIFO.
-
-      :param bytes b: The bytes to add. Its length must be a multiple of 4.
-
-  .. method:: finish()
-
-      Send any queued drawing commands directly to the hardware,
-      and return after they have all completed execution.
-
-  .. method:: flush() 
-
-      Send any queued drawing commands directly to the hardware.
-
-  .. method:: swap() 
-
-      End the current display list and dispatch it to the graphics hardware.
-      Start compiling the display list for the next frame.
+  |
 
   .. method:: cmd_animdraw(ch)
 
@@ -1522,6 +1514,43 @@ Methods to set the precision and offset used by :meth:`Vertex2f`:
       :param int us: wait duration in microseconds
 
       .. note:: 817 only
+
+  |
+
+  .. method:: cc(b) 
+
+      Append bytes to the command FIFO.
+
+      :param bytes b: The bytes to add. Its length must be a multiple of 4.
+
+  .. method:: finish()
+
+      Send any queued drawing commands directly to the hardware,
+      and return after they have all completed execution.
+
+  .. method:: flush() 
+
+      Send any queued drawing commands directly to the hardware.
+
+  .. method:: swap() 
+
+      End the current display list and dispatch it to the graphics hardware.
+      Start compiling the display list for the next frame.
+
+  .. method:: screenshot_im()
+
+      Return the current screen contents as an image
+
+      :returns image: Image of the current screen
+
+      The returned image is a PIL :mod:`~pil:PIL.Image` with mode ``RGB`` and size (:data:`w`, :data:`h`).
+
+      It can be saved to a file with::
+
+          gd.screenshot_im().save("screenshot.png")
+
+      .. note:: available on PC only
+
 
 Module constants
 ================

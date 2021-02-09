@@ -7,9 +7,13 @@ from .gameduino import Gameduino
 
 class GameduinoCircuitPython(Gameduino):
     def __init__(self):
-        if os.uname().machine == 'Raspberry Pi Pico with rp2040':
+        mach = os.uname().machine
+        if mach == 'Raspberry Pi Pico with rp2040':
             self.sp = busio.SPI(board.GP2, MOSI=board.GP3, MISO=board.GP4)
             cs = (board.GP5, board.GP6, board.GP7)
+        elif mach.startswith("Adafruit Feather M4 Express"):
+            self.sp = busio.SPI(board.SCK, MOSI=board.MOSI, MISO=board.MISO)
+            cs = (board.D9, board.D6, board.D5)
         else:
             self.sp = busio.SPI(board.D13, MOSI=board.D11, MISO=board.D12)
             cs = (board.D8, board.D9, board.D10)
@@ -23,15 +27,21 @@ class GameduinoCircuitPython(Gameduino):
             pass
         self.sp.configure(baudrate=15000000, phase=0, polarity=0)
 
+    def dazzler(self, n):
+        self.daz.value = False
+        bb = bytearray(26)
+        bb[0] = n
+        self.sp.readinto(bb)
+        self.daz.value = True
+        return bb
+        
     def controllers(self):
         self.daz.value = False
         bb = bytearray(26)
         self.sp.readinto(bb)
-        # print('raw controllers', bb)
         self.daz.value = True
-
         return (self.wii_classic_pro(bb[2:8]), self.wii_classic_pro(bb[14:20]))
-
+    
     def transfer(self, wr, rd = 0):
         self.cs.value = False
         self.sp.write(wr)

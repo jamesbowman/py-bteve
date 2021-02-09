@@ -1,8 +1,14 @@
 import struct
 import array
 
+from .registers import *
+
 _B0 = b'\x00'
 def align4(s):
+    """
+    :param bytes s: input bytes object
+    :return: the bytes object extended so that its length is a multiple of 4
+    """
     return s + _B0 * (-len(s) & 3)
 
 def f16(v):
@@ -15,7 +21,9 @@ def furmans(deg):
 class EVE:
 
     def cstring(self, s):
-        self.cc(align4(bytes(s, "utf-8") + _B0))
+        if type(s) == str:
+            s = bytes(s, "utf-8")
+        self.cc(align4(s + _B0))
 
     def fstring(self, aa):
         self.cstring(aa[0])
@@ -162,7 +170,8 @@ class EVE:
 
     def cmd_toggle(self, *args):
         self.cmd(0x12, "hhhhHH", args[0:6])
-        self.fstring(args[6:])
+        label = (args[6].encode() + b'\xff' + args[7].encode())
+        self.fstring((label,) + args[8:])
 
     def cmd_touch_transform(self, *args):
         self.cmd(0x20, "iiiiiiiiiiiiI", args)
@@ -296,11 +305,12 @@ class EVE:
 
         self.finish()
 
+        pclk = self.rd32(REG_PCLK)
+        self.wr32(REG_PCLK, 0)
+        time.sleep(0.001)
         self.wr32(REG_SCREENSHOT_EN, 1)
         self.wr32(0x0030201c, 32)
         
-        self.wr32(REG_SCREENSHOT_READ, 1)
-
         for ly in range(self.h):
             print(ly, "/", self.h)
             self.wr32(REG_SCREENSHOT_Y, ly)
@@ -316,6 +326,7 @@ class EVE:
             dest(line)
             self.wr32(REG_SCREENSHOT_READ, 0)
         self.wr32(REG_SCREENSHOT_EN, 0)
+        self.wr32(REG_PCLK, pclk)
 
     def screenshot_im(self):
         self.ssbytes = b""

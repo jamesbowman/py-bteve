@@ -1,9 +1,11 @@
 import sys
-import time
 import bteve as eve
-from spidriver import SPIDriver
 
-gd = eve.GameduinoSPIDriver(SPIDriver(sys.argv[1]))
+if sys.implementation.name == "circuitpython":
+    gd = eve.Gameduino()
+else:
+    from spidriver import SPIDriver
+    gd = eve.Gameduino(SPIDriver(sys.argv[1]))
 gd.init()
 
 gd.ClearColorRGB(0x20, 0x40, 0x20)
