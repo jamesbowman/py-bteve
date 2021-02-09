@@ -145,7 +145,7 @@ def cov0(eve):
     for (a,b,c,d,e,f,g,h,i,j,k,l,m) in perms13:
         for s in ("", "1", "12", "123", "1234", "something"):
             eve.cmd_keys(a,b,c,d,e,f,s)
-            eve.cmd_toggle(a,b,c,d,e,f,s)
+            eve.cmd_toggle(a,b,c,d,e,f,s,s)
             eve.cmd_button(a,b,c,d,e,f,s)
             eve.cmd_text(a,b,c,d,s)
 
