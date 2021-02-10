@@ -2,8 +2,20 @@ import os
 import board
 import busio
 import digitalio
+import sdcardio
+import storage
 
 from .gameduino import Gameduino
+
+def spilock(f):
+    def wrapper(*args):
+        spi = args[0].sp
+        while not spi.try_lock():
+            pass
+        r = f(*args)
+        spi.unlock()
+        return r
+    return wrapper
 
 class GameduinoCircuitPython(Gameduino):
     def __init__(self):
@@ -22,11 +34,24 @@ class GameduinoCircuitPython(Gameduino):
             r.direction = digitalio.Direction.OUTPUT
             r.value = True
             return r
-        (self.cs, self.sd, self.daz) = [pin(p) for p in cs]
-        while not self.sp.try_lock():
-            pass
+        self.cs = pin(cs[0])
+        self.daz = pin(cs[2])
+        self.setup_sd(cs[1])
+        self.setup_spi()
+
+    def setup_sd(self, sdcs):
+        try:
+            self.sdcard = sdcardio.SDCard(self.sp, sdcs)
+        except OSError:
+            return
+        self.vfs = storage.VfsFat(self.sdcard)
+        storage.mount(self.vfs, "/sd")
+
+    @spilock
+    def setup_spi(self):
         self.sp.configure(baudrate=15000000, phase=0, polarity=0)
 
+    @spilock
     def dazzler(self, n):
         self.daz.value = False
         bb = bytearray(26)
@@ -35,6 +60,7 @@ class GameduinoCircuitPython(Gameduino):
         self.daz.value = True
         return bb
         
+    @spilock
     def controllers(self):
         self.daz.value = False
         bb = bytearray(26)
@@ -42,13 +68,13 @@ class GameduinoCircuitPython(Gameduino):
         self.daz.value = True
         return (self.wii_classic_pro(bb[2:8]), self.wii_classic_pro(bb[14:20]))
     
+    @spilock
     def transfer(self, wr, rd = 0):
         self.cs.value = False
         self.sp.write(wr)
-        if rd == 0:
-            self.cs.value = True
-        else:
+        r = None
+        if rd != 0:
             r = bytearray(rd)
             self.sp.readinto(r)
-            self.cs.value = True
-            return r
+        self.cs.value = True
+        return r

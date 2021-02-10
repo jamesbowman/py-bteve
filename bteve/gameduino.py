@@ -26,6 +26,8 @@ FIFO_MAX = const(0xffc)    # Maximum reported free space in the EVE command FIFO
 class CoprocessorException(Exception):
     pass
 
+WII_none = {'bh': 0, 'brt': 0, 'b-': 0, '.': 0, 'b+': 0, 'bdd': 0, 'blt': 0, 'ly': 32, 'lx': 32, 'rx': 16, 'bdl': 0, 'rt': 0, 'bdr': 0, 'bb': 0, 'ba': 0, 'by': 0, 'bx': 0, 'bzl': 0, 'bdu': 0, 'bzr': 0, 'lt': 0, 'ry': 16}
+
 class Gameduino(_EVE, EVE):
     def init(self):
         self.register(self)
@@ -140,13 +142,28 @@ class Gameduino(_EVE, EVE):
         return self.space == FIFO_MAX
 
     def wii_classic_pro(self, b):
-        if b[4] & 1 == 0:
-            b = bytes([0, 0, 0, 0, 0xff, 0xff])
-        r4 = '. brt b+ bh b- blt bdd bdr'.split()
-        r = {id: 1 & (~b[4] >> i) for i,id in enumerate(r4)}
-        r5 = 'bdu bdl bzr bx ba by bb bzl'.split()
-        r.update({id: 1 & (~b[5] >> i) for i,id in enumerate(r5)})
-        r.update({
+        if (b[4] & 1 == 0) or (b == bytes([160, 32, 16, 0, 255, 255])):
+            return WII_none
+        b4 = ~b[4]
+        b5 = ~b[5]
+        return {
+            'brt' : 1 & (b4 >> 1),
+            'b+'  : 1 & (b4 >> 2),
+            'bh'  : 1 & (b4 >> 3),
+            'b-'  : 1 & (b4 >> 4),
+            'blt' : 1 & (b4 >> 5),
+            'bdd' : 1 & (b4 >> 6),
+            'bdr' : 1 & (b4 >> 7),
+
+            'bdu' : 1 & (b5 >> 0),
+            'bdl' : 1 & (b5 >> 1),
+            'bzr' : 1 & (b5 >> 2),
+            'bx'  : 1 & (b5 >> 3),
+            'ba'  : 1 & (b5 >> 4),
+            'by'  : 1 & (b5 >> 5),
+            'bb'  : 1 & (b5 >> 6),
+            'bzl' : 1 & (b5 >> 7),
+
             'lx' : b[0] & 63,
             'ly' : b[1] & 63,
             'rx' : (((b[0] >> 6) & 3) << 3) |
@@ -156,8 +173,7 @@ class Gameduino(_EVE, EVE):
             'lt' : (((b[2] >> 5) & 3) << 3) |
                    (((b[3] >> 5) & 7)),
             'rt' : b[3] & 31,
-        })
-        return r
+        }
 
     def result(self, n=1):
         # Return the result field of the preceding command

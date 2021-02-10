@@ -2,11 +2,13 @@ import bteve as eve
 
 gd = eve.Gameduino()
 gd.init()
+
 import pong
 import fruit
 import temperature
 
 demos = (pong, fruit, temperature)
+# demos[0].run(gd)
 sel = 0
 prev_touch = False
 while True:
@@ -38,12 +40,3 @@ while True:
         gd.cmd_button(320, y, 640, 100, 31, eve.OPT_FLAT, d.__name__)
 
     gd.swap()
-    """
-    for d in demos:
-        print('running demo', d.__name__)
-        d.run(gd)
-        while True:
-            cc = gd.controllers()
-            if cc[0]['bh'] == 0 and cc[1]['bh'] == 0:
-                break
-    """

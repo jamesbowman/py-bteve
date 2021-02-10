@@ -25,8 +25,8 @@ def map(x, x0, x1, y0 = 0, y1 = 1):
 
 class LoggingGameduinoSPIDriver(eve.GameduinoSPIDriver):
     
-    def __init__(self):
-        GameduinoSPIDriver.__init__(self)
+    def __init__(self, *args):
+        eve.GameduinoSPIDriver.__init__(self, *args)
 
         self.seq = 0
         self.spool()
@@ -36,11 +36,11 @@ class LoggingGameduinoSPIDriver(eve.GameduinoSPIDriver):
         self.seq += 1
 
     def write(self, s):
-        GameduinoSPIDriver.write(self, s)
+        eve.GameduinoSPIDriver.write(self, s)
         self.cmd_dump.write(s)
 
     def swap(self):
-        GameduinoSPIDriver.swap(self)
+        eve.GameduinoSPIDriver.swap(self)
         self.spool()
 
 def hex3(u):

@@ -338,7 +338,7 @@ class EVE:
 
     def load(self, f):
         while True:
-            s = f.read(16)
+            s = f.read(512)
             if not s:
                 return
             self.cc(align4(s))
