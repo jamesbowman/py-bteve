@@ -59,9 +59,9 @@ class Ball:
             self.hide()
             sfx(self.gd, 0x18, 40)
             if self.vel.x < 0:
-                return (0, 1)
-            else:
                 return (1, 0)
+            else:
+                return (0, 1)
         return (0, 0)
 
     def draw(self):
@@ -80,8 +80,8 @@ class Scores:
         self.s[1] += ch[1]
 
     def draw(self, gd):
-        for (x, s) in zip((640 - 100, 640 + 100), self.s):
-            gd.cmd_number(x, 80, 31, eve.OPT_CENTER, s)
+        gd.cmd_number(640 - 100, 80, 31, eve.OPT_CENTER, self.s[0])
+        gd.cmd_number(640 + 100, 80, 31, eve.OPT_CENTER, self.s[1])
 
 def pong(gd):
     gd.cmd_romfont(31, 34)
@@ -93,7 +93,7 @@ def pong(gd):
         y -= (c["ry"] - 16)
         return max(45, min(y, 675))
     yy = [360, 360]
-    while 1:
+    while True:
         gd.finish()
         cc = gd.controllers()
         if cc[0]['bh'] or cc[1]['bh']:
