@@ -55,4 +55,6 @@ html_static_path = ['_static']
 
 intersphinx_mapping = {
     'pil': ('https://pillow.readthedocs.io/en/stable', None),
+    'cpy': ('https://circuitpython.readthedocs.io/en/6.0.x', None),
+    'spi': ('https://spidriver.readthedocs.io/en/latest', None),
 }

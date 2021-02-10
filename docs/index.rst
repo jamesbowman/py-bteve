@@ -8,12 +8,17 @@ bteve documentation
 .. highlight:: python
 
 ``bteve`` is a Python driver for BridgeTek's EVE series GPUs.
-In particular it supports the `Gameduino 3X <https://gameduino.com>`_ series of display devices.
+In particular it supports the `Gameduino 3X <https://gameduino.com>`_ series of display adapters.
 
 It supports:
 
-* Python running on a PC, connected via a `SPIDriver <https://spidriver.com>`_ to the Gameduino or BT81x
-* CircuitPython on an embedded board, including Adafruit M4 boards, Teensy 4.x, and Raspberry Pi Pico
+* Python running on Windows/MacOS/Linux, connected via a :class:`~spi:spidriver.SPIDriver` to the Gameduino or BT81x
+* CircuitPython on an embedded board, including
+
+    * Adafruit M4 Metro and Feather
+    * Adafruit Metro M4
+    * Teensy 4.x
+    * Raspberry Pi Pico
 
 .. literalinclude:: ../examples/helloworld.py
 
@@ -37,9 +42,11 @@ The Gameduino class is a specialization of the base class :class:`EVE`.
   
   .. method:: init()
 
-      Initialize the EVE hardware, calling method
-      :meth:`coldstart`.
+      Initialize the EVE hardware.
       Confirm that the BT81x is running, configure it for the attached screen, and render a blank frame.
+
+      On CircuitPython this method uses :mod:`cpy:sdcardio` to attach to the GD3X microSD card as
+      ``"/sd/"``, so any files on the card can be accessed with the prefix ``"/sd/"``.
 
   .. data:: w
 
