@@ -1,5 +1,6 @@
 import struct
 import array
+from collections import namedtuple
 
 from .registers import *
 
@@ -17,6 +18,35 @@ def f16(v):
 def furmans(deg):
     """ Given an angle in degrees, return it in Furmans """
     return 0xffff & f16(deg / 360.0)
+
+_Touch = namedtuple(
+    "TouchInputs",
+    (
+    "y",
+    "x",
+    "tag_y",
+    "tag_x",
+    "tag",
+    ))
+_State = namedtuple(
+    "State",
+    (
+    "touching",
+    "press"
+    ))
+_Tracker = namedtuple(
+    "Tracker",
+    (
+    "tag",
+    "val"
+    ))
+_Inputs = namedtuple(
+    "Inputs",
+    (
+    "touch",
+    "tracker",
+    "state",
+    ))
 
 class EVE:
 
@@ -280,6 +310,14 @@ class EVE:
         self.cmd0(0x5b)
 
     # Some higher-level functions
+
+    def get_inputs(self):
+        self.finish()
+        t = _Touch(*struct.unpack("hhhhB", self.rd(REG_TOUCH_SCREEN_XY, 9)))
+        s = _State(t.x != -32768, 0)
+        (rt, rv) = struct.unpack("HH", self.rd(REG_TRACKER, 4))
+        r = _Tracker(*struct.unpack("HH", self.rd(REG_TRACKER, 4)))
+        self.inputs = _Inputs(t, r, s)
 
     def swap(self):
         self.Display()

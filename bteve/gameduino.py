@@ -1,6 +1,8 @@
 import sys
 import time
 import struct
+from collections import namedtuple
+
 if sys.implementation.name == 'circuitpython':
     from _eve import _EVE
 else:
@@ -26,7 +28,139 @@ FIFO_MAX = const(0xffc)    # Maximum reported free space in the EVE command FIFO
 class CoprocessorException(Exception):
     pass
 
-WII_none = {'bh': 0, 'brt': 0, 'b-': 0, '.': 0, 'b+': 0, 'bdd': 0, 'blt': 0, 'ly': 32, 'lx': 32, 'rx': 16, 'bdl': 0, 'rt': 0, 'bdr': 0, 'bb': 0, 'ba': 0, 'by': 0, 'bx': 0, 'bzl': 0, 'bdu': 0, 'bzr': 0, 'lt': 0, 'ry': 16}
+"""
+Adapted from https://github.com/jfurcean/CircuitPython_WiiChuck.git
+where this class ClassicController appears. It is covered by this license
+
+The MIT License (MIT)
+  
+Copyright (c) 2021 John Furcean
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+"""
+
+class ClassicController:
+    """
+    Class which provides interface to Nintendo Wii Classic Controller.
+
+    :param b6: 6 byte raw wii controller readout
+    """
+
+    _Values = namedtuple("Values", ("joysticks", "buttons", "dpad", "triggers"))
+    _Joysticks = namedtuple("Joysticks", ("rx", "ry", "lx", "ly"))
+    _Buttons = namedtuple(
+        "Buttons",
+        (
+            "A",
+            "B",
+            "X",
+            "Y",
+            "R",
+            "L",
+            "ZR",
+            "ZL",
+            "start",
+            "select",
+            "home",
+            "plus",
+            "minus",
+        ),
+    )
+    _Dpad = namedtuple("Dpad", ("up", "down", "right", "left"))
+    _Triggers = namedtuple("Trigers", ("right", "left"))
+
+    def __init__(self, b6):
+        assert len(b6) == 6
+        self.buffer = b6
+
+    @property
+    def values(self):
+        """The current state of all values."""
+        return self._Values(
+            self._joysticks(),
+            self._buttons(),
+            self._dpad(),
+            self._triggers(),
+        )
+
+    @property
+    def joysticks(self):
+        """The current joysticks positions."""
+        return self._joysticks()
+
+    @property
+    def buttons(self):
+        """The current pressed state of all buttons."""
+        return self._buttons()
+
+    @property
+    def dpad(self):
+        """The current pressed state of the dpad."""
+        return self._dpad()
+
+    @property
+    def triggers(self):
+        """The current readding from the triggers (0-31 for Pro) (0 or 31 non-Pro)."""
+        return self._triggers()
+
+    def _joysticks(self):
+        return self._Joysticks(
+            (
+                (self.buffer[0] & 0xC0) >> 3
+                | (self.buffer[1] & 0xC0) >> 5
+                | (self.buffer[2] & 0x80) >> 7
+            ),  # rx
+            self.buffer[2] & 0x1F,  # ry
+            self.buffer[0] & 0x3F,  # lx
+            self.buffer[1] & 0x3F,  # ly
+        )
+
+    def _buttons(self):
+        return self._Buttons(
+            not bool(self.buffer[5] & 0x10),  # A
+            not bool(self.buffer[5] & 0x40),  # B
+            not bool(self.buffer[5] & 0x8),  # X
+            not bool(self.buffer[5] & 0x20),  # Y
+            not bool(self.buffer[4] & 0x2),  # R
+            not bool(self.buffer[4] & 0x20),  # L
+            not bool(self.buffer[5] & 0x4),  # ZR
+            not bool(self.buffer[5] & 0x80),  # ZL
+            not bool(self.buffer[4] & 0x4),  # start
+            not bool(self.buffer[4] & 0x10),  # select
+            not bool(self.buffer[4] & 0x8),  # home
+            not bool(self.buffer[4] & 0x4),  # plus
+            not bool(self.buffer[4] & 0x10),  # minus
+        )
+
+    def _dpad(self):
+        return self._Dpad(
+            not bool(self.buffer[5] & 0x1),  # UP
+            not bool(self.buffer[4] & 0x40),  # DOWN
+            not bool(self.buffer[4] & 0x80),  # RIGHT
+            not bool(self.buffer[5] & 0x2),  # LEFT
+        )
+
+    def _triggers(self):
+        return self._Triggers(
+            self.buffer[3] & 0x1F,  # right
+            (self.buffer[2] & 0x60) >> 2 | (self.buffer[3] & 0xE0) >> 5,  # left
+        )
 
 class Gameduino(_EVE, EVE):
     def init(self):
@@ -142,38 +276,7 @@ class Gameduino(_EVE, EVE):
         return self.space == FIFO_MAX
 
     def wii_classic_pro(self, b):
-        if (b[4] & 1 == 0) or (b == bytes([160, 32, 16, 0, 255, 255])):
-            return WII_none
-        b4 = ~b[4]
-        b5 = ~b[5]
-        return {
-            'brt' : 1 & (b4 >> 1),
-            'b+'  : 1 & (b4 >> 2),
-            'bh'  : 1 & (b4 >> 3),
-            'b-'  : 1 & (b4 >> 4),
-            'blt' : 1 & (b4 >> 5),
-            'bdd' : 1 & (b4 >> 6),
-            'bdr' : 1 & (b4 >> 7),
-
-            'bdu' : 1 & (b5 >> 0),
-            'bdl' : 1 & (b5 >> 1),
-            'bzr' : 1 & (b5 >> 2),
-            'bx'  : 1 & (b5 >> 3),
-            'ba'  : 1 & (b5 >> 4),
-            'by'  : 1 & (b5 >> 5),
-            'bb'  : 1 & (b5 >> 6),
-            'bzl' : 1 & (b5 >> 7),
-
-            'lx' : b[0] & 63,
-            'ly' : b[1] & 63,
-            'rx' : (((b[0] >> 6) & 3) << 3) |
-                   (((b[1] >> 6) & 3) << 1) |
-                   (((b[2] >> 7) & 1)),
-            'ry' : b[2] & 31,
-            'lt' : (((b[2] >> 5) & 3) << 3) |
-                   (((b[3] >> 5) & 7)),
-            'rt' : b[3] & 31,
-        }
+        return ClassicController(b)
 
     def result(self, n=1):
         # Return the result field of the preceding command

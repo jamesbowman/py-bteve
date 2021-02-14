@@ -36,27 +36,30 @@ class GameduinoCircuitPython(Gameduino):
             return r
         self.cs = pin(cs[0])
         self.daz = pin(cs[2])
-        self.setup_sd(cs[1])
+        if not self.setup_sd(cs[1]):
+            pin(cs[1])
         self.setup_spi()
 
     def setup_sd(self, sdcs):
         try:
             self.sdcard = sdcardio.SDCard(self.sp, sdcs)
         except OSError:
-            return
+            return False
         self.vfs = storage.VfsFat(self.sdcard)
         storage.mount(self.vfs, "/sd")
+        return True
 
     @spilock
     def setup_spi(self):
         self.sp.configure(baudrate=15000000, phase=0, polarity=0)
 
     @spilock
-    def dazzler(self, n):
+    def dazzler(self, cmd, n = 0):
         self.daz.value = False
         bb = bytearray(26)
-        bb[0] = n
-        self.sp.readinto(bb)
+        bb[0] = cmd
+        bb[1] = n
+        self.sp.write_readinto(bb, bb)
         self.daz.value = True
         return bb
         
