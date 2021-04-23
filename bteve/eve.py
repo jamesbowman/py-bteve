@@ -19,9 +19,13 @@ def furmans(deg):
     """ Given an angle in degrees, return it in Furmans """
     return 0xffff & f16(deg / 360.0)
 
+# Order matches the register layout, so can fill with a single block read
 _Touch = namedtuple(
     "TouchInputs",
     (
+    "rawy",
+    "rawx",
+    "rz",
     "y",
     "x",
     "tag_y",
@@ -32,7 +36,8 @@ _State = namedtuple(
     "State",
     (
     "touching",
-    "press"
+    "press",
+    "release"
     ))
 _Tracker = namedtuple(
     "Tracker",
@@ -68,6 +73,9 @@ class EVE:
 
     def cmd_bitmap_transform(self, *args):
         self.cmd(0x21, "iiiiiiiiiiiiI", args)
+
+    def cmd_touch_transform(self, *args):
+        self.cmd(0x20, "iiiiiiiiiiiiI", args)
 
     def cmd_button(self, *args):
         self.cmd(0x0d, "hhhhhH", args[:6])
@@ -253,9 +261,6 @@ class EVE:
     def cmd_setscratch(self, *args):
         self.cmd(0x3c, "I", args)
 
-    # def cmd_sync(self, 
-    # def cmd_setbitmap(self, 
-
     #
     # 815 commands
     #
@@ -291,6 +296,13 @@ class EVE:
     def cmd_flashspidesel(self):
         self.cmd0(0x4b)
 
+    def cmd_flashspitx(self, b):
+        self.cmd(0x4c, "I", (len(b),))
+        self.cc(align4(b))
+
+    def cmd_flashspirx(self, ptr, num):
+        self.cmd(0x4d, "II", (ptr, num))
+
     def cmd_flashsource(self, *args):
         self.cmd(0x4e, "I", args)
 
@@ -313,11 +325,20 @@ class EVE:
 
     def get_inputs(self):
         self.finish()
-        t = _Touch(*struct.unpack("hhhhB", self.rd(REG_TOUCH_SCREEN_XY, 9)))
-        s = _State(t.x != -32768, 0)
-        (rt, rv) = struct.unpack("HH", self.rd(REG_TRACKER, 4))
+        t = _Touch(*struct.unpack("HHIhhhhB", self.rd(REG_TOUCH_RAW_XY, 17)))
+
         r = _Tracker(*struct.unpack("HH", self.rd(REG_TRACKER, 4)))
+
+        if not hasattr(self, "prev_touching"):
+            self.prev_touching = False
+        touching = (t.x != -32768)
+        press = touching and not self.prev_touching
+        release = (not touching) and self.prev_touching
+        s = _State(touching, press, release)
+        self.prev_touching = touching
+
         self.inputs = _Inputs(t, r, s)
+        return self.inputs
 
     def swap(self):
         self.Display()

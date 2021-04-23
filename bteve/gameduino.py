@@ -87,7 +87,10 @@ class ClassicController:
 
     def __init__(self, b6):
         assert len(b6) == 6
-        self.buffer = b6
+        if b6 == b'\x00\x00\x00\x00\x00\x00':
+            self.buffer = b'\xff\xff\xff\xff\xff\xff'
+        else:
+            self.buffer = b6
 
     @property
     def values(self):
