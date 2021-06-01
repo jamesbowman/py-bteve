@@ -401,3 +401,40 @@ class EVE:
             if not s:
                 return
             self.cc(align4(s))
+
+class MoviePlayer:
+    def __init__(self, gd, f, mf_base = 0xf0000, mf_size = 0x8000):
+        self.gd = gd
+        self.f = f
+        self.mf_base = mf_base
+        self.mf_size = mf_size
+
+        gd.cmd_mediafifo(mf_base, mf_size)
+        self.wp = 0
+        gd.cmd_regwrite(REG_MEDIAFIFO_WRITE, 0)
+
+    def play(self):
+        gd = self.gd
+        gd.cmd_playvideo(OPT_MEDIAFIFO | OPT_FULLSCREEN)
+        gd.cmd_nop()
+        gd.flush()
+        while not gd.is_idle():
+            self.service()
+        gd.finish()
+        
+    def service(self):
+        gd = self.gd
+
+        rp = gd.rd32(REG_MEDIAFIFO_READ)
+        fullness = (self.wp - rp) % self.mf_size
+        SZ = 2048
+        # print("rp=%x wp=%x" % (rp, self.wp))
+        while fullness < (self.mf_size - SZ):
+            s = self.f.read(SZ)
+            if not s:
+                return
+            # print("Writing %x to %x" % (len(s), self.mf_base + self.wp))
+            gd.wr(self.mf_base + self.wp, s)
+            self.wp = (self.wp + len(s)) % self.mf_size
+            gd.wr32(REG_MEDIAFIFO_WRITE, self.wp)
+            fullness += len(s)
