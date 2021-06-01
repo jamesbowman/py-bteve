@@ -13,7 +13,7 @@ if __name__ == "__main__":
     gd.init()
 
     while 1:
-        for fn in ("fun-1500.avi", "tra-1500.avi", "fish.avi"):
+        for fn in ("car-1500.avi", "dj-1500.avi", "fun-1500.avi", "spa-1500.avi", "tra-1500.avi", "tub-1500.avi", "fish.avi"):
             with open(D + fn, "rb") as f:
                 mp = eve.MoviePlayer(gd, f)
                 mp.play()
