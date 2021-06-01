@@ -415,7 +415,7 @@ class MoviePlayer:
 
     def play(self):
         gd = self.gd
-        gd.cmd_playvideo(OPT_MEDIAFIFO | OPT_FULLSCREEN)
+        gd.cmd_playvideo(OPT_MEDIAFIFO | OPT_FULLSCREEN | OPT_NOTEAR)
         gd.cmd_nop()
         gd.flush()
         while not gd.is_idle():

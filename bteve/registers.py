@@ -107,6 +107,7 @@ OPT_NOHANDS            = const(49152)
 OPT_RIGHTX             = const(2048)
 OPT_SIGNED             = const(256)
 
+OPT_NOTEAR             = const(4)
 OPT_FULLSCREEN         = const(8)
 OPT_MEDIAFIFO          = const(16)
 OPT_FORMAT             = const(4096)     # For 815
