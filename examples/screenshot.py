@@ -18,6 +18,7 @@ if 0:
     gd.swap()
 if 1:
     rr = random.randrange
+    random.seed(8)
     gd.VertexFormat(2)
     gd.Clear()
     gd.Begin(eve.POINTS)

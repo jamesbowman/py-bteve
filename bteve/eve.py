@@ -380,9 +380,15 @@ class EVE:
                 pass
             self.wr32(REG_SCREENSHOT_READ, 1)
             bgra = self.rd(RAM_SCREENSHOT, 4 * self.w)
-            (b,g,r,a) = [bgra[i::4] for i in range(4)]
-            line = bytes(sum(zip(r,g,b), ()))
-            dest(line)
+            rgbline = bytearray(3 * self.w)
+            for i in range(self.w):
+                b = bgra[4 * i + 0]
+                g = bgra[4 * i + 1]
+                r = bgra[4 * i + 2]
+                rgbline[3 * i + 0] = r
+                rgbline[3 * i + 1] = g
+                rgbline[3 * i + 2] = b
+            dest(rgbline)
             self.wr32(REG_SCREENSHOT_READ, 0)
         self.wr32(REG_SCREENSHOT_EN, 0)
         self.wr32(REG_PCLK, pclk)
