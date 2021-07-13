@@ -16,7 +16,7 @@ def tri(t):
 
 def at(t, ff):
     x = gd.w * tri(ff[0] * t)
-    y = gd.h * tri(ff[1] * t) - 10
+    y = gd.h * tri(ff[1] * t)
     gd.Vertex2f(x, y)
 
 F = [random.random() for i in range(9)]
