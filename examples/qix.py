@@ -19,7 +19,6 @@ def at(t, ff):
     y = gd.h * tri(ff[1] * t) - 10
     gd.Vertex2f(x, y)
 
-random.seed(0)
 F = [random.random() for i in range(9)]
 
 while True:
