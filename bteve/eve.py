@@ -321,6 +321,40 @@ class EVE:
     def cmd_nop(self):
         self.cmd0(0x5b)
 
+    #
+    # 817 commands
+    #
+
+    def cmd_testcard(self, *args):
+        self.cmd0(0x61)
+
+    def cmd_hsf(self, *args):
+        self.cmd(0x62, "I", args)
+
+    def cmd_apilevel(self, *args):
+        self.cmd(0x63, "I", args)
+
+    def cmd_apilevel(self, *args):
+        self.cmd(0x63, "I", args)
+
+    def cmd_getimage(self):
+        self.cmd(0x64, "5I", (0, 0, 0, 0, 0))
+
+    def cmd_wait(self, *args):
+        self.cmd(0x65, "I", args)
+
+    def cmd_return(self):
+        self.cmd0(0x66)
+
+    def cmd_calllist(self, *args):
+        self.cmd(0x67, "I", args)
+
+    def cmd_newlist(self, *args):
+        self.cmd(0x68, "I", args)
+
+    def cmd_endlist(self):
+        self.cmd0(0x69)
+
     # Some higher-level functions
 
     def get_inputs(self):
