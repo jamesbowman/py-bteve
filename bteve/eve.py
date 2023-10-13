@@ -355,6 +355,9 @@ class EVE:
     def cmd_endlist(self):
         self.cmd0(0x69)
 
+    def cmd_animframeram(self):
+        self.cmd(0x6d, "IIII", args)
+
     # Some higher-level functions
 
     def get_inputs(self):
