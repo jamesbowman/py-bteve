@@ -355,7 +355,7 @@ class EVE:
     def cmd_endlist(self):
         self.cmd0(0x69)
 
-    def cmd_animframeram(self):
+    def cmd_animframeram(self, *args):
         self.cmd(0x6d, "hhII", args)
 
     # Some higher-level functions
