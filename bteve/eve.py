@@ -1,8 +1,15 @@
+import time
+import sys
 import struct
 import array
 from collections import namedtuple
 
 from .registers import *
+
+if sys.implementation.name == 'circuitpython':
+    from _eve import _EVE
+else:
+    from ._eve import _EVE
 
 _B0 = b'\x00'
 def align4(s):
@@ -53,8 +60,7 @@ _Inputs = namedtuple(
     "state",
     ))
 
-class EVE:
-
+class BaseEVE(_EVE):
     def cstring(self, s):
         if type(s) == str:
             s = bytes(s, "utf-8")
