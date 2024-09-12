@@ -1,0 +1,4 @@
+set -e
+
+pip install -e .
+pytest smoke.py
