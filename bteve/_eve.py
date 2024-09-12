@@ -2,6 +2,11 @@ import struct
 
 class _EVE:
 
+    model = 0
+
+    def setmodel(self, x):
+        self.model = x
+
     def cc(self, s):
         assert (len(s) % 4) == 0
         self.__buf += s
@@ -44,28 +49,41 @@ class _EVE:
     def BitmapSource(self, addr):
         self.c4((1 << 24) | ((addr & 0xffffff)))
 
-    def _transform(self, opcode, v):
+    def _transform(self, opcode, args):
         """ Handle the dual-format fixed-point 8.8 / 1.15 
             used by BitmapTransformA,B,D,E opcodes """
-        if -2 <= v < 2:
-            (p, a) = (1, int(32768 * v))
+        if self.model == 0:
+            (p, a) = args
         else:
-            (p, a) = (0, int(256 * v))
-        self.c4((opcode << 24) | ((p & 1) << 17) | (a & 131071))
+            (v, ) = args
+            if -2 <= v < 2:
+                (p, a) = (1, int(32768 * v))
+            else:
+                (p, a) = (0, int(256 * v))
+            self.c4((opcode << 24) | ((p & 1) << 17) | (a & 131071))
 
-    def BitmapTransformA(self, v):
-        self._transform(21, v)
-    def BitmapTransformB(self, v):
-        self._transform(22, v)
-    def BitmapTransformD(self, v):
-        self._transform(24, v)
-    def BitmapTransformE(self, v):
-        self._transform(25, v)
+    def BitmapTransformA(self, *args):
+        self._transform(21, args)
+    def BitmapTransformB(self, *args):
+        self._transform(22, args)
+    def BitmapTransformD(self, *args):
+        self._transform(24, args)
+    def BitmapTransformE(self, *args):
+        self._transform(25, args)
 
     def BitmapTransformC(self, c):
-        self.c4((23 << 24) | (int(256 * c) & 16777215))
+        if self.model == 0:
+            x = c
+        else:
+            x = int(256 * c)
+        self.c4((23 << 24) | (x & 16777215))
     def BitmapTransformF(self, f):
-        self.c4((26 << 24) | (int(256 * f) & 16777215))
+        if self.model == 0:
+            x = f
+        else:
+            x = int(256 * f)
+        self.c4((26 << 24) | (x & 16777215))
+
     def BlendFunc(self, src, dst):
         self.c4((11 << 24) | ((src & 7) << 3) | ((dst & 7)))
     def Call(self, dest):
