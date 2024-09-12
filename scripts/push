@@ -1,0 +1,2 @@
+cp smoke.py ../CircuitPython_bteve/
+sed 's/bteve/bteve2/' smoke.py > ../py-bteve2-dev/smoke.py
