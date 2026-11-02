@@ -1,4 +1,4 @@
 set -e
 
 pip install -e .
-pytest smoke.py
+pytest smoke.py test_connectors.py

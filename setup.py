@@ -1,4 +1,4 @@
-from distutils.core import setup
+from setuptools import setup
 
 for l in open("bteve/__init__.py", "rt"):
     if l.startswith("__version__"):
@@ -12,8 +12,10 @@ setup(name='bteve',
       description='Interface to the Bridgetek EVE embedded GPUs',
       long_description='Interface to the Bridgetek EVE embedded GPUs, as used in the Gameduino and Gameduino Dazzler',
       license='GPL',
-      packages=['bteve'],
+      packages=['bteve', 'connectors'],
+      py_modules=['apprunner'],
       install_requires=[],
+      extras_require={'spidriver': ['spidriver>=2.0.0']},
       project_urls={
         'Documentation': 'https://bteve.readthedocs.io/en/latest/',
       }

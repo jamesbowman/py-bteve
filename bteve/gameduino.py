@@ -3,11 +3,7 @@ import time
 import struct
 from collections import namedtuple
 
-if sys.implementation.name == 'circuitpython':
-    from _eve import _EVE
-else:
-    from ._eve import _EVE
-from .eve import EVE
+from .eve import BaseEVE
 from .registers import *
 
 if sys.implementation.name != "circuitpython":
@@ -165,8 +161,8 @@ class ClassicController:
             (self.buffer[2] & 0x60) >> 2 | (self.buffer[3] & 0xE0) >> 5,  # left
         )
 
-class Gameduino(_EVE, EVE):
-    def init(self):
+class Gameduino(BaseEVE):
+    def init(self, minimal=False):
         self.register(self)
 
         self.coldstart()
@@ -186,7 +182,11 @@ class Gameduino(_EVE, EVE):
         #     self.rd32(REG_VSIZE),
         #     self.rd32(REG_CMDB_SPACE)))
 
-        self.standard_startup()
+        if minimal:
+            self.w = self.rd32(REG_HSIZE)
+            self.h = self.rd32(REG_VSIZE)
+        else:
+            self.standard_startup()
 
     def coldstart(self):
         # self.host_cmd(0x61, 0x46)   # 72 MHz
