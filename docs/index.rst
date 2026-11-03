@@ -20,7 +20,7 @@ It supports:
     * Teensy 4.x
     * Raspberry Pi Pico
 
-.. literalinclude:: ../examples/helloworld.py
+.. literalinclude:: ../examples/retired/helloworld.py
 
 .. image:: /images/helloworld.png
 
