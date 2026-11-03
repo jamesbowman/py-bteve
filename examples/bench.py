@@ -1,46 +1,70 @@
-import os
-import sys
+"""Measure verified RAM_G write/read throughput using generated data or a file."""
+
+from binascii import crc32
+from pathlib import Path
 import time
+
+import apprunner
 import bteve as eve
 
-gd = eve.Gameduino()
-gd.init()
+RAM_G_SIZE = 1024 * 1024
 
-print(os.listdir("/sd"))
-FN = "/sd/spa-1500.avi"
-L = 825478
-t0 = time.monotonic()
-if 0:
-    gd.cmd_memwrite(0, L)
-    with open(FN, "rb") as f:
-        gd.load(f)
+
+def add_arguments(parser):
+    parser.add_argument("--size", type=int, default=256 * 1024,
+                        help="Generated payload size in bytes (default: 262144)")
+    parser.add_argument("--chunk", type=int, default=4096,
+                        help="Transfer chunk size in bytes (default: 4096)")
+    parser.add_argument("--file", type=Path,
+                        help="Use this file instead of generated data (at most 1 MiB)")
+
+
+def benchmark(gd, args):
+    if not 0 < args.chunk <= RAM_G_SIZE:
+        raise ValueError("--chunk must be between 1 and 1048576")
+    if args.file:
+        with args.file.expanduser().open("rb") as source:
+            data = source.read(RAM_G_SIZE + 1)
+    else:
+        if not 0 < args.size <= RAM_G_SIZE:
+            raise ValueError("--size must be between 1 and 1048576")
+        data = (bytes(range(256)) * ((args.size + 255) // 256))[:args.size]
+    if not 0 < len(data) <= RAM_G_SIZE:
+        raise ValueError("Payload must contain between 1 and 1048576 bytes")
+
     gd.finish()
-else:
-    with open(FN, "rb") as f:
-        a = 0
-        while True:
-            s = f.read(2048)
-            if not s:
-                break
-            gd.wr(a, s)
-            a += len(s)
-        assert a == L
-t1 = time.monotonic()
-took = t1 - t0
-rate = (L / took) / 1024
-print(f"took {took:.3f} s, {rate:.3f} Kbytes/s")
+    start = time.perf_counter()
+    for offset in range(0, len(data), args.chunk):
+        gd.wr(offset, data[offset:offset + args.chunk])
+    gd.rd32(eve.REG_ID)  # Read barrier: include delivery of the final serial write.
+    write_time = time.perf_counter() - start
 
-"""
+    start = time.perf_counter()
+    actual = bytearray()
+    for offset in range(0, len(data), args.chunk):
+        actual.extend(gd.rd(offset, min(args.chunk, len(data) - offset)))
+    read_time = time.perf_counter() - start
+    if actual != data:
+        raise RuntimeError("RAM_G readback differs from the payload")
+    expected_crc = crc32(data) & 0xffffffff
+    gd.cmd_memcrc(0, len(data), 0)
+    if gd.result() != expected_crc:
+        raise RuntimeError("EVE memory CRC differs from the host CRC")
 
-512 byte chunks
-Pico:    took 4.022 s, 200.430 Kbytes/s
-Metro:   took 2.869 s, 280.980 Kbytes/s
-Teensy:  took 1.951 s, 413.188 Kbytes/s
-Feather: took 2.799 s, 288.024 Kbytes/s
+    lines = [
+        "Payload: {} bytes, chunk: {}".format(len(data), args.chunk),
+        "Write: {:.1f} KiB/s ({:.3f} s)".format(len(data) / write_time / 1024, write_time),
+        "Read: {:.1f} KiB/s ({:.3f} s)".format(len(data) / read_time / 1024, read_time),
+        "Readback and CRC verified: {:08X}".format(expected_crc),
+    ]
+    gd.ClearColorRGB(0x18, 0x20, 0x30)
+    gd.Clear()
+    gd.ColorRGB(255, 255, 255)
+    for index, line in enumerate(lines):
+        print(line)
+        gd.cmd_text(16, 32 + index * 40, 27, 0, line)
+    gd.swap()
 
-Pico:    took 3.727 s, 216.294 Kbytes/s
-Metro:   took 2.773 s, 290.707 Kbytes/s
-Teensy:  took 1.514 s, 532.395 Kbytes/s
-Feather: took 2.677 s, 301.132 Kbytes/s
 
-"""
+if __name__ == "__main__":
+    apprunner.run(benchmark, add_arguments=add_arguments)

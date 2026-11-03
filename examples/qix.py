@@ -1,41 +1,39 @@
-import sys
-import time
+"""Animated line trails, scaled to the connected display."""
+
 import math
 import random
+import time
+
+import apprunner
 import bteve as eve
 
-if sys.implementation.name == "circuitpython":
-    gd = eve.Gameduino()
-else:
-    from spidriver import SPIDriver
-    gd = eve.Gameduino(SPIDriver(sys.argv[1]))
-gd.init()
 
 def tri(t):
     return 2 * abs(math.fmod(t, 1.0) - 0.5)
 
-def at(t, ff):
-    x = gd.w * tri(ff[0] * t)
-    y = gd.h * tri(ff[1] * t)
-    gd.Vertex2f(x, y)
 
-F = [random.random() for i in range(9)]
+def qix(gd, frames=None):
+    frequencies = [random.random() for _ in range(9)]
 
-while True:
-    t = time.monotonic_ns() / 18000000
-    gd.Clear()
-    gd.VertexFormat(3)
-    gd.LineWidth(3)
-    for dt in range(0, 30, 3):
-        gd.Begin(eve.LINE_STRIP)
-        tn = (t - dt) / 150
-        gd.ColorRGB(
-            int(255 * tri(F[6] * tn)),
-            int(255 * tri(F[7] * tn)),
-            int(255 * tri(F[8] * tn)))
-        at(tn, F[0:2])
-        at(tn, F[2:4])
-        at(tn, F[4:6])
-        at(tn, F[0:2])
+    def at(t, ff):
+        gd.Vertex2f(gd.w * tri(ff[0] * t), gd.h * tri(ff[1] * t))
 
-    gd.swap()
+    frame = 0
+    while frames is None or frame < frames:
+        t = time.monotonic() / 0.018
+        gd.Clear()
+        gd.VertexFormat(3)
+        gd.LineWidth(3)
+        for dt in range(0, 30, 3):
+            gd.Begin(eve.LINE_STRIP)
+            tn = (t - dt) / 150
+            gd.ColorRGB(*(int(255 * tri(f * tn)) for f in frequencies[6:9]))
+            for pair in (frequencies[0:2], frequencies[2:4],
+                         frequencies[4:6], frequencies[0:2]):
+                at(tn, pair)
+        gd.swap()
+        frame += 1
+
+
+if __name__ == "__main__":
+    apprunner.run(qix)

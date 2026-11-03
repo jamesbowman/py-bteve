@@ -11,7 +11,7 @@ import pytest
 import apprunner
 from bteve.gameduino import Gameduino
 from bteve.gameduino_spidriver import GameduinoSPIDriver
-from bteve.registers import REG_CMDB_SPACE, REG_HSIZE, REG_ID, REG_VSIZE
+from bteve.registers import REG_CMDB_SPACE, REG_HSIZE, REG_ID, REG_PCLK, REG_VSIZE
 
 
 def test_spi_framing_and_error_cleanup():
@@ -141,3 +141,54 @@ def test_missing_connector_and_dependency_are_distinguished(monkeypatch, capsys)
     with pytest.raises(SystemExit):
         apprunner.run(lambda gd: None, argv=[])
     assert "requires missing module 'spidriver'" in capsys.readouterr().err
+
+
+def test_runner_separates_application_and_connector_options(monkeypatch):
+    device = Mock()
+    factory = Mock(return_value=device)
+    def connector_arguments(parser):
+        parser.add_argument('--port', required=True)
+    def app_arguments(parser):
+        parser.add_argument('--output', default='capture.png')
+    monkeypatch.setitem(sys.modules, 'connectors.test', SimpleNamespace(
+        EVE=factory, add_arguments=connector_arguments))
+    app = Mock(return_value=123)
+    assert apprunner.run(app, argv=['-c', 'test', '--port', '/dev/test',
+                                    '--output', 'custom.png'],
+                         add_arguments=app_arguments) == 123
+    factory.assert_called_once_with(port='/dev/test')
+    assert app.call_args.args[0] is device
+    assert app.call_args.args[1].output == 'custom.png'
+    device.finish.assert_called_once_with()
+    device.close.assert_called_once_with()
+
+
+@pytest.mark.parametrize('failure', [None, 'destination', 'read', 'timeout'])
+def test_screenshot_restores_display_on_success_and_failure(monkeypatch, failure):
+    from bteve import eve as eve_module
+    gd = Gameduino()
+    gd.w, gd.h = 2, 1
+    gd.finish = Mock()
+    gd.rd32 = Mock(return_value=3)
+    gd.wr32 = Mock()
+    def read(address, count):
+        if address == 0x3020e8:
+            return b'\x01' * 8 if failure == 'timeout' else bytes(8)
+        assert (address, count) == (0x3c2000, 8)
+        if failure == 'read':
+            raise OSError('read failed')
+        return bytes([1, 2, 3, 255, 4, 5, 6, 255])
+    gd.rd = read
+    destination = Mock(side_effect=OSError('destination failed')
+                       if failure == 'destination' else None)
+    monkeypatch.setattr(eve_module.time, 'sleep', lambda _: None)
+    ticks = iter([0, 2])
+    monkeypatch.setattr(eve_module.time, 'monotonic', lambda: next(ticks))
+    if failure:
+        with pytest.raises(TimeoutError if failure == 'timeout' else OSError):
+            gd.screenshot(destination)
+    else:
+        gd.screenshot(destination)
+        destination.assert_called_once_with(bytes([3, 2, 1, 6, 5, 4]))
+    writes = [call.args for call in gd.wr32.call_args_list]
+    assert writes[-3:] == [(0x302174, 0), (0x302010, 0), (REG_PCLK, 3)]

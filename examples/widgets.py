@@ -1,8 +1,7 @@
-import sys
+import apprunner
 import bteve as eve
-import struct
 
-def widgets(gd):
+def widgets(gd, frames=None):
     TAG_DIAL      = 200
     TAG_SLIDER    = 201
     TAG_TOGGLE    = 202
@@ -14,13 +13,15 @@ def widgets(gd):
     options = eve.OPT_FLAT
     prevkey = 0
 
+    scale = min(gd.w / 480, gd.h / 272)
     def xf(c):
-        return c * gd.w // 480
+        return round(c * scale)
     def vx(x, y):
         gd.Vertex2f(xf(x), xf(y))
 
     key = 0
-    while True:
+    frame = 0
+    while frames is None or frame < frames:
         gd.get_inputs()
         if gd.inputs.tracker.tag in (TAG_DIAL, TAG_SLIDER, TAG_TOGGLE):
             value = gd.inputs.tracker.val
@@ -35,7 +36,7 @@ def widgets(gd):
             message = message[1:] + chr(key)
         prevkey = key
 
-        gd.cmd_gradient(0, 0,   0x404044, xf(480), xf(480), 0x606068)
+        gd.cmd_gradient(0, 0, 0x404044, gd.w, gd.h, 0x606068)
         gd.ColorRGB(0x70, 0x70, 0x70)
 
         gd.LineWidth(xf(8))
@@ -88,12 +89,8 @@ def widgets(gd):
         gd.cmd_text(xf((144+472) // 2), xf(146), 18, eve.OPT_CENTERX, message)
 
         gd.swap()
+        frame += 1
 
-if sys.implementation.name == "circuitpython":
-    gd = eve.Gameduino()
-else:
-    from spidriver import SPIDriver
-    gd = eve.Gameduino(SPIDriver(sys.argv[1]))
-gd.init()
 
-widgets(gd)
+if __name__ == "__main__":
+    apprunner.run(widgets)

@@ -408,33 +408,35 @@ class BaseEVE(_EVE):
         self.finish()
 
         pclk = self.rd32(REG_PCLK)
-        self.wr32(REG_PCLK, 0)
-        time.sleep(0.001)
-        self.wr32(REG_SCREENSHOT_EN, 1)
-        self.wr32(0x0030201c, 32)
-        
-        for ly in range(self.h):
-            print(ly, "/", self.h)
-            self.wr32(REG_SCREENSHOT_Y, ly)
-            self.wr32(REG_SCREENSHOT_START, 1)
-            time.sleep(.002)
-            # while (self.raw_read(REG_SCREENSHOT_BUSY) | self.raw_read(REG_SCREENSHOT_BUSY + 4)): pass
-            while self.rd(REG_SCREENSHOT_BUSY, 8) != bytes(8):
-                pass
-            self.wr32(REG_SCREENSHOT_READ, 1)
-            bgra = self.rd(RAM_SCREENSHOT, 4 * self.w)
-            rgbline = bytearray(3 * self.w)
-            for i in range(self.w):
-                b = bgra[4 * i + 0]
-                g = bgra[4 * i + 1]
-                r = bgra[4 * i + 2]
-                rgbline[3 * i + 0] = r
-                rgbline[3 * i + 1] = g
-                rgbline[3 * i + 2] = b
-            dest(rgbline)
-            self.wr32(REG_SCREENSHOT_READ, 0)
-        self.wr32(REG_SCREENSHOT_EN, 0)
-        self.wr32(REG_PCLK, pclk)
+        try:
+            self.wr32(REG_PCLK, 0)
+            time.sleep(0.001)
+            self.wr32(REG_SCREENSHOT_EN, 1)
+            self.wr32(0x0030201c, 32)
+
+            for ly in range(self.h):
+                self.wr32(REG_SCREENSHOT_Y, ly)
+                self.wr32(REG_SCREENSHOT_START, 1)
+                deadline = time.monotonic() + 1.0
+                while self.rd(REG_SCREENSHOT_BUSY, 8) != bytes(8):
+                    if time.monotonic() >= deadline:
+                        raise TimeoutError("Screenshot timed out on line {}".format(ly))
+                    time.sleep(0.001)
+                self.wr32(REG_SCREENSHOT_READ, 1)
+                bgra = self.rd(RAM_SCREENSHOT, 4 * self.w)
+                rgbline = bytearray(3 * self.w)
+                rgbline[0::3] = bgra[2::4]
+                rgbline[1::3] = bgra[1::4]
+                rgbline[2::3] = bgra[0::4]
+                dest(rgbline)
+                self.wr32(REG_SCREENSHOT_READ, 0)
+        finally:
+            # A file/transport error or Ctrl-C must not leave the panel stopped.
+            try:
+                self.wr32(REG_SCREENSHOT_READ, 0)
+                self.wr32(REG_SCREENSHOT_EN, 0)
+            finally:
+                self.wr32(REG_PCLK, pclk)
 
     def screenshot_im(self):
         self.ssbytes = b""

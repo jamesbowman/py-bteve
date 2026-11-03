@@ -1,42 +1,45 @@
-import sys
-import bteve as eve
+"""Draw a test pattern and capture the live display to a PNG file."""
+
+from pathlib import Path
 import random
 
+import apprunner
+import bteve as eve
 import minpng
 
-if sys.implementation.name == "circuitpython":
-    gd = eve.Gameduino()
-else:
-    from spidriver import SPIDriver
-    gd = eve.Gameduino(SPIDriver(sys.argv[1]))
-gd.init()
 
-if 0:
-    gd.ClearColorRGB(0x20, 0x40, 0x20)
-    gd.Clear()
-    gd.cmd_text(gd.w // 2, gd.h // 2, 31, eve.OPT_CENTER, "Hello world")
-    gd.swap()
-if 1:
-    rr = random.randrange
-    random.seed(8)
-    gd.VertexFormat(2)
-    gd.Clear()
-    gd.Begin(eve.POINTS)
-    for i in range(100):
-        gd.ColorRGB(rr(256), rr(256), rr(256))
-        gd.PointSize(rr(gd.w // 6))
-        gd.Vertex2f(rr(gd.w), rr(gd.h))
-    gd.swap()
+def add_arguments(parser):
+    parser.add_argument("-o", "--output", type=Path, default=Path("screenshot.png"),
+                        help="Output PNG filename (default: screenshot.png)")
 
-def screenshot(filename):
-    with open(filename, "wb") as pngf:
-        p = minpng.PngWriter(pngf.write, gd.w, gd.h)
+
+def screenshot(gd, filename):
+    """Capture the current display without changing its display list."""
+    filename = Path(filename).expanduser()
+    with filename.open("wb") as output:
+        png = minpng.PngWriter(output.write, gd.w, gd.h)
         def handle_line(rgb):
-            for i in range(gd.w):
-                r = rgb[3 * i + 0]
-                g = rgb[3 * i + 1]
-                b = rgb[3 * i + 2]
-                p.rgb(r, g, b)
+            for i in range(0, len(rgb), 3):
+                png.rgb(rgb[i], rgb[i + 1], rgb[i + 2])
         gd.screenshot(handle_line)
+    print("Saved {} ({} x {})".format(filename, gd.w, gd.h))
 
-screenshot("/sd/foo.png")
+
+def main(gd, args):
+    rng = random.Random(8)
+    gd.ClearColorRGB(0x18, 0x20, 0x30)
+    gd.Clear()
+    gd.VertexFormat(2)
+    gd.Begin(eve.POINTS)
+    for _ in range(100):
+        gd.ColorRGB(rng.randrange(256), rng.randrange(256), rng.randrange(256))
+        gd.PointSize(rng.randrange(4, max(5, min(gd.w, gd.h) // 12)))
+        gd.Vertex2f(rng.randrange(gd.w), rng.randrange(gd.h))
+    gd.ColorRGB(255, 255, 255)
+    gd.cmd_text(gd.w // 2, 24, 27, eve.OPT_CENTER, "Live EVE screenshot")
+    gd.swap()
+    screenshot(gd, args.output)
+
+
+if __name__ == "__main__":
+    apprunner.run(main, add_arguments=add_arguments)

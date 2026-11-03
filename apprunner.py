@@ -5,12 +5,14 @@ import importlib
 import sys
 
 
-def run(app, minimal=False, argv=None):
+def run(app, minimal=False, argv=None, add_arguments=None):
     """Initialize EVE, call app(gd), finish pending commands, and close it.
 
     Connector modules expose add_arguments(parser) and EVE(**options), whose
     instances provide init(minimal=False), finish(), and close(). Unknown CLI
     arguments are left in sys.argv for the application, preserving argv[0].
+    If add_arguments(parser) is supplied, its options appear in --help and the
+    application is called as app(gd, args), with the parsed Namespace.
     """
     selector = argparse.ArgumentParser(add_help=False, allow_abbrev=False)
     selector.add_argument("-c", "--connector", default="cspidriver")
@@ -29,10 +31,13 @@ def run(app, minimal=False, argv=None):
     parser.add_argument("--minimal", action="store_true", default=minimal,
                         help="Boot EVE without loading the display configuration from flash")
     connector.add_arguments(parser)
+    connector_options = {action.dest for action in parser._actions} - {
+        "help", "connector", "minimal"}
+    if add_arguments is not None:
+        add_arguments(parser)
     args, remaining = parser.parse_known_args(argv)
-    options = vars(args)
-    options.pop("connector")
-    minimal = options.pop("minimal")
+    options = {name: getattr(args, name) for name in connector_options}
+    minimal = args.minimal
 
     original_argv = sys.argv
     sys.argv = original_argv[:1] + remaining
@@ -40,7 +45,7 @@ def run(app, minimal=False, argv=None):
         gd = connector.EVE(**options)
         try:
             gd.init(minimal=minimal)
-            result = app(gd)
+            result = app(gd) if add_arguments is None else app(gd, args)
             gd.finish()
             return result
         finally:

@@ -1,42 +1,52 @@
-import sys
+"""Read flash IDs and restore the original flash attachment mode."""
+
+import apprunner
 import bteve as eve
 
-if sys.implementation.name == "circuitpython":
-    gd = eve.Gameduino()
-else:
-    from spidriver import SPIDriver
-    gd = eve.Gameduino(SPIDriver(sys.argv[1]))
-gd.init()
 
-gd.Clear()
-gd.ScissorSize(480, 272)
-gd.ClearColorRGB(0x00, 0x20, 0x40)
-gd.Clear()
+def flashinfo(gd):
+    status = gd.rd32(eve.REG_FLASH_STATUS)
+    if status not in (1, 2, 3):
+        raise RuntimeError("Flash is unavailable (status {})".format(status))
 
-gd.cmd_flashdetach()
+    def read_id(command, count):
+        gd.cmd_flashspidesel()
+        gd.cmd_flashspitx(bytes([command]))
+        gd.cmd_flashspirx(0, count)
+        gd.cmd_flashspidesel()
+        gd.finish()
+        return gd.rd(0, count)
 
-def showbytes(y, pre, bb):
-    msg = pre + ":   " + ":".join(["%02X" % x for x in bb])
-    print(msg)
-    gd.cmd_text(10, y, 28, 0, msg)
+    gd.cmd_flashdetach()
+    try:
+        jedec = read_id(0x9f, 3)
+        uid = read_id(0x4b, 12)[4:]  # Four dummy bytes precede the unique ID.
+    finally:
+        gd.cmd_flashspidesel()
+        if status >= 2:
+            gd.cmd_flashattach()
+        if status == 3:
+            gd.cmd_flashfast()
+            result = gd.result()
+            if result:
+                raise RuntimeError("Could not restore flash fast mode: 0x{:x}".format(result))
+        gd.finish()
 
-gd.cmd_flashspidesel()
-gd.cmd_flashspitx(bytes([0x9f]))
-gd.cmd_flashspirx(0, 3)
-gd.finish()
-showbytes(40, "Flash ID", gd.rd(0, 3))
+    restored = gd.rd32(eve.REG_FLASH_STATUS)
+    if restored != status:
+        raise RuntimeError("Flash status changed: {} -> {}".format(status, restored))
+    gd.ClearColorRGB(0x00, 0x20, 0x40)
+    gd.Clear()
+    gd.ColorRGB(255, 255, 255)
+    for y, label, data in ((40, "Flash ID", jedec), (80, "Unique ID", uid)):
+        message = label + ": " + ":".join("{:02X}".format(b) for b in data)
+        print(message)
+        gd.cmd_text(16, y, 27, 0, message)
+    message = "Flash mode restored: {}".format(restored)
+    print(message)
+    gd.cmd_text(16, 120, 27, 0, message)
+    gd.swap()
 
-gd.cmd_flashspidesel()
-gd.cmd_flashspitx(bytes([0x4b]))
-gd.cmd_flashspirx(0, 4 + 8)
-gd.finish()
-showbytes(80, "Unique ID", gd.rd(4, 8))
 
-scale = 12
-gd.cmd_setbitmap(4, eve.L1, 8, 8)
-gd.BitmapSize(eve.NEAREST, eve.BORDER, eve.BORDER, 8 * scale, 8 * scale)
-gd.BlendFunc(eve.SRC_ALPHA, 0)
-gd.cmd_scale(scale, scale)
-gd.cmd_setmatrix()
-gd.Vertex2f(10, 120)
-gd.swap()
+if __name__ == "__main__":
+    apprunner.run(flashinfo)

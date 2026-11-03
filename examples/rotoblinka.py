@@ -1,6 +1,6 @@
-import sys
+from pathlib import Path
+import apprunner
 import math
-import time
 import bteve as eve
 
 def norm(L):
@@ -19,7 +19,7 @@ def setup_circular(gd):
     c = math.sqrt(.45)
     gauss = norm([math.exp(-(x*x) / (2 * c ** 2)) for x in xx])
     gd.cmd_memwrite(0, len(gauss))
-    gd.cc(bytes([int(255 * e) for e in gauss]))
+    gd.cc(eve.align4(bytes([int(255 * e) for e in gauss])))
 
 def draw_circular(gd):
     # Draw gaussian in X and Y multiplied to create a circular gradient
@@ -49,39 +49,38 @@ def draw_circular(gd):
     gd.Vertex2f(gd.w, gd.h)
     gd.RestoreContext()
 
-def run(assetdir, gd):
+def rotoblinka(gd, frames=None):
+    assetdir = Path(__file__).resolve().parents[1] / "assets"
     setup_circular(gd)
 
     gd.BitmapHandle(0)
-    gd.cmd_loadimage(2000, 0)
-    gd.load(open(assetdir + "blinka540.png", "rb"))
-    # gd.BitmapSize(eve.BILINEAR, eve.BORDER, eve.BORDER, 540, 540)
-
+    gd.cmd_loadimage(2048, 0)
+    with (assetdir / "blinka540.png").open("rb") as source:
+        gd.load(source)
     gd.BitmapHandle(1)
-    gd.cmd_loadimage(-1, 0)
-    gd.load(open(assetdir + "circuitpython.png", "rb"))
+    gd.cmd_loadimage(-1, 0)  # Let EVE append after the previous decoded image.
+    with (assetdir / "circuitpython.png").open("rb") as source:
+        gd.load(source)
+    panel_scale = min(gd.w, gd.h) / 720
 
     def ring(scale, t):
         # Draw a ring of 10 blinkas, 36 degrees apart
-        r = 480
+        r = min(gd.w, gd.h) * 0.34
         for i in range(10):
             angle = 360 * i / 10 + t
             gd.cmd_loadidentity()
-            gd.cmd_rotatearound(540 // 2, 540 // 2, angle, scale)
+            gd.cmd_rotatearound(540 // 2, 540 // 2, angle, scale * panel_scale * 0.30)
             gd.cmd_setmatrix()
             th = math.radians(-angle)
             x = scale * r * math.sin(th)
             y = scale * r * math.cos(th)
             gd.Vertex2f(x, y)
 
-    def dlptr():
-        gd.finish()
-        return eve.RAM_DL + gd.rd32(eve.REG_CMD_DL)
-    drawlists = []
-
     t = 7
-    while True:
+    frame = 0
+    while frames is None or frame < frames:
         gd.VertexFormat(2)
+        gd.Clear()
 
         # Bluish background glow
         gd.ColorRGB(0x40, 0x50, 0x70)
@@ -109,18 +108,15 @@ def run(assetdir, gd):
         # Central logo
         gd.BitmapHandle(1)      # circuitpython.png
         gd.ColorRGB(0xff, 0xff, 0xff)
+        gd.cmd_loadidentity()
+        gd.cmd_rotatearound(364 // 2, 395 // 2, 0, panel_scale * 0.70)
+        gd.cmd_setmatrix()
         gd.Vertex2f((gd.w - 364) / 2, (gd.h - 395) / 2)
 
         gd.swap()
         t += 0.5
-        # gd.screenshot_im().save("out.png") ; sys.exit(0)
+        frame += 1
 
-if sys.implementation.name == "circuitpython":
-    gd = eve.Gameduino()
-    assetdir = ""
-else:
-    from spidriver import SPIDriver
-    gd = eve.Gameduino(SPIDriver(sys.argv[1]))
-    assetdir = "assets/"
-gd.init()
-run(assetdir, gd)
+
+if __name__ == "__main__":
+    apprunner.run(rotoblinka)
