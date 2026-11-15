@@ -7,7 +7,9 @@ from binascii import crc32
 
 def main(gd):
     print("REG_ID: 0x{:02x}".format(gd.rd32(eve.REG_ID)))
-    print("Display: {} x {}".format(gd.w, gd.h))
+    if hasattr(gd, "chip_model"):
+        print("EVE model: {}".format(gd.chip_model))
+    print("Current timing registers: {} x {}".format(gd.w, gd.h))
     print("Command FIFO free: {} bytes".format(gd.rd32(eve.REG_CMDB_SPACE)))
     # A result-bearing command verifies both FIFO writes and memory reads.
     expected = crc32(gd.rd(0, 4)) & 0xffffffff

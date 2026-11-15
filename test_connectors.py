@@ -3,15 +3,32 @@
 import importlib
 import os
 import sys
+import time
 from types import SimpleNamespace
-from unittest.mock import Mock
+from unittest.mock import Mock, call
 
 import pytest
 
 import apprunner
+from bteve import registers as reg
 from bteve.gameduino import Gameduino
 from bteve.gameduino_spidriver import GameduinoSPIDriver
 from bteve.registers import REG_CMDB_SPACE, REG_HSIZE, REG_ID, REG_PCLK, REG_VSIZE
+
+
+def mock_chip(gd, chip_id=0x011708):
+    memory = {REG_ID: 0x7c, reg.REG_CPURESET: 0, 0xc0000: chip_id,
+              REG_CMDB_SPACE: 4092, REG_HSIZE: 480, REG_VSIZE: 272}
+
+    def read(address, count):
+        return memory.get(address, 0).to_bytes(count, 'little')
+
+    def write(address, data):
+        memory[address] = int.from_bytes(data, 'little')
+
+    gd.rd = Mock(side_effect=read)
+    gd.wr = Mock(side_effect=write)
+    return memory
 
 
 def test_spi_framing_and_error_cleanup():
@@ -40,8 +57,7 @@ def test_spi_framing_and_error_cleanup():
 def test_minimal_startup_skips_display_configuration():
     gd = Gameduino()
     gd.transfer = Mock(return_value=b'')
-    registers = {REG_ID: 0x7c, REG_CMDB_SPACE: 4092, REG_HSIZE: 480, REG_VSIZE: 272}
-    gd.rd32 = Mock(side_effect=registers.__getitem__)
+    mock_chip(gd, chip_id=0x011608)
     gd.standard_startup = Mock()
     gd.init(minimal=True)
     assert (gd.w, gd.h, gd.space) == (480, 272, 4092)
@@ -52,16 +68,38 @@ def test_minimal_startup_skips_display_configuration():
     gd.standard_startup.assert_called_once_with()
 
 
-@pytest.mark.parametrize('product', ['spidriver1', 'spidriver2', 'spidriverq'])
-def test_adapter_setup_and_close(monkeypatch, product):
-    driver = Mock(product=product)
+def test_gameduino_default_loads_flash_startup(monkeypatch):
+    monkeypatch.setattr(time, 'sleep', lambda _: None)
+    gd = GameduinoSPIDriver(Mock())
+    memory = mock_chip(gd, chip_id=0x011608)
+    memory[0xffc] = 0x7c6a0100
+    gd.cmd_flashread = Mock(wraps=gd.cmd_flashread)
+    gd.cmd_regwrite = Mock(wraps=gd.cmd_regwrite)
+    gd.init()
+    gd.cmd_flashread.assert_called_once_with(0, 0x1000, 0x1000)
+    gd.rd.assert_any_call(0, 512)
+    gd.cmd_regwrite.assert_any_call(reg.REG_GPIO, 0x83)
+
+
+@pytest.fixture
+def spi_connector(monkeypatch):
+    driver = Mock(product='spidriverq')
     factory = Mock(return_value=driver)
     monkeypatch.setitem(sys.modules, 'spidriver', SimpleNamespace(SPIDriver=factory))
     monkeypatch.setitem(sys.modules, 'connectors.cspidriver', None)
     monkeypatch.delitem(sys.modules, 'connectors.cspidriver')
-    connector = importlib.import_module('connectors.cspidriver')
+    return importlib.import_module('connectors.cspidriver'), driver, factory
+
+
+@pytest.mark.parametrize('product', ['spidriver1', 'spidriver2', 'spidriverq'])
+def test_adapter_setup_and_close(spi_connector, product):
+    connector, driver, factory = spi_connector
+    driver.product = product
     gd = connector.EVE('~/ports/test')
     factory.assert_called_once_with(os.path.expanduser('~/ports/test'))
+    assert isinstance(gd, GameduinoSPIDriver)
+    driver.seta.assert_called_once_with(1)
+    driver.setb.assert_called_once_with(1)
     driver.setmode.assert_called_once_with(0)
     if product == 'spidriverq':
         driver.set_width.assert_called_once_with(1)
@@ -75,6 +113,100 @@ def test_adapter_setup_and_close(monkeypatch, product):
     with pytest.raises(OSError, match='setup failed'):
         connector.EVE('/dev/test')
     driver.close.assert_called_once_with()
+
+
+@pytest.mark.parametrize('board,width,height,hcycle,pclk_freq,pclk_2x,pclk', [
+    ('riverdi-ips35', 320, 240, 371, 0x022, 0, 1),
+    ('riverdi-ips43', 480, 272, 531, 0x032, 0, 1),
+    ('riverdi-ips50', 800, 480, 816, 0xd14, 0, 3),
+    ('riverdi-ips70', 1024, 600, 1344, 0xd12, 0, 1),
+    ('riverdi-ips101', 1280, 800, 1440, 0x8c1, 1, 1),
+])
+def test_riverdi_display_startup(spi_connector, monkeypatch, board, width, height,
+                                hcycle, pclk_freq, pclk_2x, pclk):
+    connector, driver, _ = spi_connector
+    events = Mock()
+    monkeypatch.setattr(time, 'sleep', events.sleep)
+    gd = connector.EVE('/dev/test', board=board)
+    memory = mock_chip(gd)
+    events.attach_mock(gd.wr, "write")
+    gd.cmd_flashread = Mock()
+    gd.init()
+    assert (gd.w, gd.h, gd.chip_model) == (width, height, 817)
+    assert memory[REG_HSIZE] == width
+    assert memory[REG_VSIZE] == height
+    assert memory[reg.REG_HCYCLE] == hcycle
+    assert memory[reg.REG_PCLK_FREQ] == pclk_freq
+    assert memory[reg.REG_PCLK_2X] == pclk_2x
+    assert memory[REG_PCLK] == pclk
+    writes = [(c.args[0], int.from_bytes(c.args[1], 'little'))
+              for c in gd.wr.call_args_list]
+    assert writes.index((reg.REG_HCYCLE, hcycle)) < writes.index((REG_PCLK, pclk))
+    if board == 'riverdi-ips50':
+        events.assert_has_calls([
+            call.write(REG_PCLK, bytes([pclk])),
+            call.sleep(0.12),
+            call.write(reg.REG_GPIOX, b'\x00\x90'),
+            call.sleep(0.25),
+            call.write(reg.REG_PWM_DUTY, bytes([128])),
+        ])
+    else:
+        assert writes.index((REG_PCLK, pclk)) < writes.index((reg.REG_PWM_DUTY, 128))
+    gd.cmd_flashread.assert_not_called()
+    driver.seta.assert_not_called()
+    driver.setb.assert_not_called()
+
+
+@pytest.mark.parametrize('board', ['riverdi', 'riverdi-ips50'])
+def test_riverdi_minimal_skips_panel_and_flash(spi_connector, monkeypatch, board):
+    connector, driver, _ = spi_connector
+    monkeypatch.setattr(time, 'sleep', lambda _: None)
+    gd = connector.EVE('/dev/test', board=board, oscillator='internal')
+    memory = mock_chip(gd)
+    gd.cmd_flashread = Mock()
+    gd.init(minimal=True)
+    assert (gd.w, gd.h) == (480, 272)
+    assert memory[reg.REG_FREQUENCY] == 72000000
+    assert b'\x48\x00\x00' in [call.args[0] for call in driver.write.call_args_list]
+    assert {REG_HSIZE, REG_VSIZE, REG_PCLK, reg.REG_PWM_DUTY}.isdisjoint(
+        call.args[0] for call in gd.wr.call_args_list)
+    gd.cmd_flashread.assert_not_called()
+
+
+@pytest.mark.parametrize('register,value,error', [
+    (REG_ID, 0xff, TimeoutError),
+    (reg.REG_CPURESET, 1, TimeoutError),
+    (0xc0000, 0x011608, ValueError),
+])
+def test_riverdi_refuses_to_configure_unready_or_wrong_chip(
+        spi_connector, monkeypatch, register, value, error):
+    connector, _, _ = spi_connector
+    gd = connector.EVE('/dev/test', board='riverdi-ips50')
+    memory = mock_chip(gd)
+    memory[register] = value
+    ticks = iter(range(1000))
+    monkeypatch.setattr(time, 'sleep', lambda _: None)
+    monkeypatch.setattr(time, 'monotonic', lambda: next(ticks) / 10)
+    with pytest.raises(error):
+        gd.init()
+    assert REG_PCLK not in memory
+
+
+def test_unknown_board_rejected_before_open(spi_connector):
+    connector, _, factory = spi_connector
+    with pytest.raises(ValueError, match='unknown|Unknown'):
+        connector.EVE('/dev/test', board='no-such-panel')
+    factory.assert_not_called()
+
+
+def test_riverdi_requires_panel_for_full_startup(spi_connector, monkeypatch):
+    connector, _, _ = spi_connector
+    monkeypatch.setattr(time, 'sleep', lambda _: None)
+    gd = connector.EVE('/dev/test', board='riverdi')
+    memory = mock_chip(gd)
+    with pytest.raises(ValueError, match='part number'):
+        gd.init()
+    assert REG_PCLK not in memory
 
 
 @pytest.mark.parametrize('failure', [None, 'init', 'app', 'finish', 'construct'])

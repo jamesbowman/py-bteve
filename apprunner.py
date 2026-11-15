@@ -29,7 +29,7 @@ def run(app, minimal=False, argv=None, add_arguments=None):
     parser = argparse.ArgumentParser(description="EVE application", parents=[selector],
                                      allow_abbrev=False)
     parser.add_argument("--minimal", action="store_true", default=minimal,
-                        help="Boot EVE without loading the display configuration from flash")
+                        help="Boot EVE and skip panel configuration")
     connector.add_arguments(parser)
     connector_options = {action.dest for action in parser._actions} - {
         "help", "connector", "minimal"}

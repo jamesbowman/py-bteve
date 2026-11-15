@@ -235,3 +235,7 @@ REG_GPIOX_DIR          = const(0x302098)
 REG_FLASH_SIZE         = const(0x00309024) 
 REG_FLASH_STATUS       = const(0x003025f0) 
 REG_ADAPTIVE_FRAMERATE = const(0x0030257c) 
+
+# BT817/8 pixel clock PLL
+REG_PCLK_FREQ          = const(0x302614)
+REG_PCLK_2X            = const(0x302618)

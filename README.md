@@ -7,25 +7,62 @@ Python driver for BridgeTek's Eve GPU
 
 ## SPIDriver applications
 
-Install the package and the optional SPIDriver dependency with the Python
-environment you use for your applications:
+Install the package and the optional adapter dependency in your Python environment.
 
 ```sh
 python -m pip install -e '.[spidriver]'
-python hwdiag.py -c cspidriver --port ~/ports/usb-Excamera_spiq_ex5c3751
-python helloworld.py -c cspidriver --port ~/ports/usb-Excamera_spiq_ex5c3751
 ```
 
-`cspidriver` is the default connector. It supports SPIDriver, SPIDriver2, and
-SPIDriverQ through spidriver 2.0.0 or later. Q is explicitly put into single SPI
-mode; all adapters use clock mode 0. The serial port is required rather than
-hardcoded. Quoted paths containing `~` also work.
+`--port` selects the adapter. `--board` selects the display module. The default
+connector, `cspidriver`, uses single SPI, mode 0, on SPIDriver, SPIDriver2 and
+SPIDriverQ. Quoted port paths containing `~` work.
 
-The diagnostic wakes/resets EVE, reports its ID and display dimensions, and
-checks a command-generated memory CRC against a host calculation. It skips
-display setup. The hello-world example uses the existing Gameduino startup,
-which reads the display configuration from external flash. It does not program
-flash. Other boards may need their own display initialization.
+### Riverdi BT817
+
+Check the controller and command FIFO before selecting a panel. This resets EVE,
+reads the chip model and current timing registers, then verifies a memory CRC.
+The dimensions shown after reset are register defaults and cannot identify the LCD.
+
+```sh
+python hwdiag.py --port ~/ports/usb-Excamera_spiq_ex5c3751 --board riverdi
+```
+
+For drawing, match the part number on the module to its Riverdi timing profile.
+For example, a 5-inch Riverdi EVE4 using the IPS_50 timings runs with
+`--board riverdi-ips50`. [5-inch module datasheet](https://download.riverdi.com/RVT50HQBNWC00-B/DS_RVT50HQBNWC00-B_Rev.1.7.pdf)
+
+```sh
+python helloworld.py --port ~/ports/usb-Excamera_spiq_ex5c3751 --board riverdi-ips50
+```
+
+| Board profile | Riverdi EVE4 timing set | Active pixels |
+| --- | --- | --- |
+| `riverdi-ips35` | IPS_35 | 320 × 240 |
+| `riverdi-ips43` | IPS_43 | 480 × 272 |
+| `riverdi-ips50` | IPS_50 | 800 × 480 |
+| `riverdi-ips70` | IPS_70 | 1024 × 600 |
+| `riverdi-ips101` | IPS_101 | 1280 × 800 |
+
+The 5-inch profile uses a 24 MHz pixel clock and asserts DISP after the clock
+is running. It waits 250 ms before enabling the backlight at 100% duty. To change
+brightness after startup, call `gd.wr8(eve.REG_PWM_DUTY, duty)` with `bteve`
+imported as `eve` and a duty from 0 to 128.
+[5-inch LCD power sequencing, section 12.4](https://download.riverdi.com/RVT50HQTNWC00/DS_RVT50HQTNWC00_Rev.1.1.pdf#page=15)
+
+The profiles default to an external oscillator. Add `--oscillator internal` for
+modules that specify the internal oscillator. Riverdi startup uses an EVE host
+reset over SPI. It sends no auxiliary-pin commands and assumes PD_N is released.
+See [Riverdi's startup guide](https://riverdi.com/blog/getting-started-with-eve4-display-full-guide)
+and [panel definitions](https://github.com/riverdi/riverdi-eve-lib/blob/main/riverdi_modules/modules.h).
+
+### Gameduino
+
+The default board, `gameduino`, uses the original flash configuration and auxiliary
+pin setup. Existing invocations can omit `--board`.
+
+```sh
+python helloworld.py --port /dev/your-adapter
+```
 
 Applications supply a function accepting the connected device:
 
@@ -44,30 +81,41 @@ if __name__ == "__main__":
 The runner initializes the device, calls the application, waits for pending
 commands, and closes the connection. It also closes on initialization or
 application errors. Use `--minimal` (or `run(main, minimal=True)`) to boot EVE
-without loading the display configuration from flash. Minimal startup still
-sends the wake/reset commands; it is not a passive connection to a running app.
+and verify its chip identity while skipping panel setup. Minimal startup still
+runs the selected board's wake/reset sequence.
 Arguments not consumed by the runner remain in `sys.argv` for the application.
 
 Connectors live in the installed `connectors` package and are imported only when
 selected. A connector exports `add_arguments(parser)` for its command-line
 options and `EVE(**options)` for construction. Devices provide `init(minimal=False)`,
-`finish()`, and `close()`. SPI connectors can inherit the existing Gameduino
-protocol and implement `transfer(write_bytes, read_count=0)`, keeping chip select
-asserted across both phases. The existing `bteve.gameduino_spidriver.GameduinoSPIDriver`
-class remains available for callers that supply their own adapter object.
+`finish()`, and `close()`. A new SPI connector can inherit `bteve.device.EVEDevice`, implement
+`transfer(write_bytes, read_count=0)` with chip select held across both phases,
+and assign a board profile to `self.board`. The existing
+`bteve.gameduino_spidriver.GameduinoSPIDriver` class accepts an open adapter.
+
+To add a display board on an existing connector, supply a Python object with
+`wake(device)` for the host reset/clock sequence and `configure_display(device)`
+for the panel, first display list, and backlight. Set `model` to the expected EVE
+model (e.g. `817`) and optionally `system_frequency` to the selected clock in Hz.
+The shared code checks chip readiness and model before display setup, then reads
+the active dimensions into `device.w` and `device.h`. Pass the object directly
+with `connectors.cspidriver.EVE(port, board=my_profile)`. Timing-only Riverdi
+variants share the setup code in `bteve/riverdi.py`.
 
 ## Examples
 
-These desktop examples use the same connector and port options:
+These desktop examples accept the same connector, port and board options. The
+commands below assume a Gameduino. For a Riverdi module, add its matching
+`--board` option.
 
 ```sh
-python examples/qix.py --port ~/ports/usb-Excamera_spiq_ex5c3751
-python examples/widgets.py --port ~/ports/usb-Excamera_spiq_ex5c3751
-python examples/sketch.py --port ~/ports/usb-Excamera_spiq_ex5c3751
-python examples/flashinfo.py --port ~/ports/usb-Excamera_spiq_ex5c3751
-python examples/rotoblinka.py --port ~/ports/usb-Excamera_spiq_ex5c3751
-python examples/bench.py --port ~/ports/usb-Excamera_spiq_ex5c3751 --size 262144 --chunk 4096
-python examples/screenshot.py --port ~/ports/usb-Excamera_spiq_ex5c3751 --output capture.png
+python examples/qix.py --port /dev/your-adapter
+python examples/widgets.py --port /dev/your-adapter
+python examples/sketch.py --port /dev/your-adapter
+python examples/flashinfo.py --port /dev/your-adapter
+python examples/rotoblinka.py --port /dev/your-adapter
+python examples/bench.py --port /dev/your-adapter --size 262144 --chunk 4096
+python examples/screenshot.py --port /dev/your-adapter --output capture.png
 ```
 
 - `qix` animates colored line trails using the configured display dimensions.
