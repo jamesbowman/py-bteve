@@ -143,8 +143,7 @@ to work without that option.
 
 ## To release
 
-    python -m pip install --upgrade build
-    python -m build
-    python -m twine upload dist/*
+See [RELEASING.md](RELEASING.md) for instructions on publishing to PyPI with
+Trusted Publishing and provenance.
 
 
